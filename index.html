@@ -69,6 +69,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .exam-card.s2{border-color:rgba(20,184,166,.3)}.exam-card.s2:hover{border-color:var(--teal)}
 .exam-card.full{border-color:rgba(245,158,11,.3)}.exam-card.full:hover{border-color:var(--amber)}
 .exam-card.weak{border-color:rgba(239,68,68,.3)}.exam-card.weak:hover{border-color:var(--red)}
+.exam-card.due{border-color:rgba(34,197,94,.3)}.exam-card.due:hover{border-color:var(--green)}
 .exam-card.calc{border-color:rgba(108,99,255,.3)}.exam-card.calc:hover{border-color:var(--accent)}
 
 /* EMPTY RESOURCES */
@@ -227,9 +228,6 @@ select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);pad
 <div class="view active anim" id="view-home">
   <div class="stat-row" id="statsRow"></div>
 
-  <div id="resourceSection"></div>
-  <div id="pdfStudySection"></div>
-
   <!-- UNIT 1 — Semester 1 -->
   <div class="slabel">Unit 1 — Semester 1 <div class="slabel-line"></div></div>
   <div class="ch-grid" id="unit1Grid"></div>
@@ -241,6 +239,12 @@ select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);pad
   <!-- EXAM MODES -->
   <div class="slabel">Exam Modes <div class="slabel-line"></div></div>
   <div class="exam-grid">
+    <div class="exam-card due" onclick="startSession('due')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#22c55e,#14b8a6)"></div>
+      <div class="ch-icon">🧠</div>
+      <div class="ch-name">Due for Review</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px" id="dueCardMeta">Spaced repetition queue</div>
+    </div>
     <div class="exam-card s1" onclick="startSession('sem1')">
       <div class="ch-top" style="background:linear-gradient(90deg,#3b82f6,#6c63ff)"></div>
       <div class="ch-icon">📘</div>
@@ -404,59 +408,6 @@ const TOPICS = {
     kw:['derivative','differentiate','differentiation','dy/dx','tangent','instantaneous','rate of change','stationary','maximum','minimum','optimis','antiderivative','calculus','limit','f\'(x)','d/dx','velocity','displacement','polynomial','slope of tangent','anti-differ']},
 };
 const TOPIC_LIST = Object.values(TOPICS);
-const UNIT1_IDS = ['t11','t12','t13'];
-const UNIT2_IDS = ['t21','t22','t23'];
-
-// ══════════════════════════════════════════════════
-// BUILT-IN QUESTION BANK (6 topics, calc tagged)
-// ══════════════════════════════════════════════════
-const BUILTIN = [
-  // 1.1 Counting & Probability
-  {topicId:'t11',q:'A committee of 3 is chosen from 8 people. How many different committees are possible?',a:'56',hint:'Use combinations: ⁸C₃',exp:'⁸C₃ = 8!/(3!·5!) = (8×7×6)/(3×2×1) = 56',marks:2,calculator:'Calculator-free'},
-  {topicId:'t11',q:'Events A and B are independent with P(A) = 0.4 and P(B) = 0.3. Find P(A ∩ B).',a:'P(A ∩ B) = 0.12',hint:'For independent events: P(A ∩ B) = P(A) × P(B)',exp:'0.4 × 0.3 = 0.12',marks:1,calculator:'Calculator-free'},
-  {topicId:'t11',q:'P(A) = 0.5, P(B) = 0.4, P(A ∩ B) = 0.2. Find P(A ∪ B).',a:'P(A ∪ B) = 0.7',hint:'Addition rule: P(A ∪ B) = P(A) + P(B) − P(A ∩ B)',exp:'0.5 + 0.4 − 0.2 = 0.7',marks:2,calculator:'Calculator-free'},
-  {topicId:'t11',q:'P(B|A) = 0.6 and P(A) = 0.5. Find P(A ∩ B).',a:'P(A ∩ B) = 0.3',hint:'P(A ∩ B) = P(B|A) × P(A)',exp:'0.6 × 0.5 = 0.3',marks:2,calculator:'Calculator-free'},
-  {topicId:'t11',q:'How many ways can 5 books be arranged on a shelf?',a:'120',hint:'5! = 5 × 4 × 3 × 2 × 1',exp:'5! = 120',marks:1,calculator:'Calculator-free'},
-  {topicId:'t11',q:'Expand (x + y)⁴ using the binomial theorem.',a:'x⁴ + 4x³y + 6x²y² + 4xy³ + y⁴',hint:'Use row 4 of Pascal\'s triangle: 1, 4, 6, 4, 1',exp:'Coefficients from ⁴C₀ to ⁴C₄: 1,4,6,4,1',marks:3,calculator:'Calculator-free'},
-  // 1.2 Functions & Graphs
-  {topicId:'t12',q:'State the equation of the axis of symmetry of y = 2x² − 8x + 3.',a:'x = 2',hint:'x = −b/(2a)',exp:'x = −(−8)/(2×2) = 8/4 = 2',marks:1,calculator:'Calculator-free'},
-  {topicId:'t12',q:'Find the x-intercepts of y = x² − 5x + 6.',a:'x = 2 and x = 3',hint:'Factorise the quadratic',exp:'(x−2)(x−3) = 0 → x = 2 or x = 3',marks:2,calculator:'Calculator-free'},
-  {topicId:'t12',q:'State the domain and range of f(x) = √(x − 3).',a:'Domain: x ≥ 3, Range: y ≥ 0',hint:'Square root requires non-negative input',exp:'x − 3 ≥ 0 → x ≥ 3. Output is always ≥ 0.',marks:2,calculator:'Calculator-free'},
-  {topicId:'t12',q:'Find the gradient of the line through (1, 3) and (4, 9).',a:'Gradient = 2',hint:'m = (y₂ − y₁)/(x₂ − x₁)',exp:'(9−3)/(4−1) = 6/3 = 2',marks:1,calculator:'Calculator-free'},
-  {topicId:'t12',q:'Determine the equation of the line through (2, 5) perpendicular to y = ½x + 1.',a:'y = −2x + 9',hint:'Perpendicular gradients multiply to −1',exp:'Perp. gradient = −2. y − 5 = −2(x − 2) → y = −2x + 9',marks:3,calculator:'Calculator-free'},
-  {topicId:'t12',q:'State the asymptotes of y = 3/(x − 2) + 1.',a:'x = 2 (vertical), y = 1 (horizontal)',hint:'Hyperbola y = a/(x−b) + c has asymptotes x = b, y = c',exp:'Vertical: x = 2, Horizontal: y = 1',marks:2,calculator:'Calculator-free'},
-  {topicId:'t12',q:'The discriminant of ax² + bx + c = 0 is Δ = b² − 4ac. If Δ < 0, what does this mean?',a:'No real solutions (no x-intercepts)',hint:'Discriminant tells us about the roots',exp:'Δ < 0 → negative under square root → no real roots',marks:1,calculator:'Calculator-free'},
-  {topicId:'t12',q:'Factorise: x³ − 3x² − 4x + 12, given x = 2 is a root.',a:'(x − 2)(x + 2)(x − 3)',hint:'Divide out (x − 2) using polynomial division or inspection',exp:'x³ − 3x² − 4x + 12 = (x−2)(x²−x−6) = (x−2)(x+2)(x−3)',marks:3,calculator:'Calculator-assumed'},
-  // 1.3 Trigonometry
-  {topicId:'t13',q:'Convert 135° to radians.',a:'3π/4 radians',hint:'Multiply degrees by π/180',exp:'135 × π/180 = 3π/4',marks:1,calculator:'Calculator-free'},
-  {topicId:'t13',q:'Find the exact value of sin(π/3).',a:'sin(π/3) = √3/2',hint:'Exact values: π/3 = 60°',exp:'sin 60° = √3/2 (exact value to memorise)',marks:1,calculator:'Calculator-free'},
-  {topicId:'t13',q:'A sector has radius 5 cm and angle π/4 rad. Find its arc length.',a:'Arc length = 5π/4 cm',hint:'Arc length = rθ',exp:'L = 5 × π/4 = 5π/4 cm',marks:2,calculator:'Calculator-free'},
-  {topicId:'t13',q:'Find the area of a triangle with sides b = 6, c = 8 and included angle A = 30°.',a:'Area = 12 cm²',hint:'Area = ½bc sin A',exp:'½ × 6 × 8 × sin 30° = 24 × 0.5 = 12 cm²',marks:2,calculator:'Calculator-free'},
-  {topicId:'t13',q:'State the period of y = sin(3x).',a:'Period = 2π/3',hint:'Period = 2π/b where b is the coefficient of x',exp:'Period = 2π/3',marks:1,calculator:'Calculator-free'},
-  {topicId:'t13',q:'Solve sin(x) = 0.5 for 0 ≤ x ≤ 2π.',a:'x = π/6 and x = 5π/6',hint:'sin is positive in 1st and 2nd quadrants',exp:'sin⁻¹(0.5) = π/6. Second solution: π − π/6 = 5π/6',marks:3,calculator:'Calculator-free'},
-  {topicId:'t13',q:'In triangle ABC, a = 7, b = 10, B = 50°. Find angle A using the sine rule.',a:'A ≈ 32.6°',hint:'sin A / a = sin B / b',exp:'sin A = 7 × sin 50° / 10 ≈ 0.537, A = sin⁻¹(0.537) ≈ 32.6°',marks:3,calculator:'Calculator-assumed'},
-  // 2.1 Exponential Functions
-  {topicId:'t21',q:'Simplify: (2³)² × 2⁻⁴',a:'4',hint:'Power of power: multiply indices. Then subtract.',exp:'2⁶ × 2⁻⁴ = 2² = 4',marks:2,calculator:'Calculator-free'},
-  {topicId:'t21',q:'Write 64^(1/3) as an integer.',a:'4',hint:'Fractional index: a^(1/n) = ⁿ√a',exp:'64^(1/3) = ∛64 = 4',marks:1,calculator:'Calculator-free'},
-  {topicId:'t21',q:'Solve 3^x = 81.',a:'x = 4',hint:'Write 81 as a power of 3',exp:'81 = 3⁴, so 3^x = 3⁴ → x = 4',marks:2,calculator:'Calculator-free'},
-  {topicId:'t21',q:'Describe the key features of y = 2^x.',a:'y-intercept (0,1), always positive, asymptote y = 0, increasing',hint:'Think about what happens as x → ±∞',exp:'As x→∞, y→∞. As x→−∞, y→0. Always above x-axis.',marks:3,calculator:'Calculator-free'},
-  {topicId:'t21',q:'Write 0.000435 in scientific notation.',a:'4.35 × 10⁻⁴',hint:'Move decimal until one non-zero digit before decimal point',exp:'0.000435 = 4.35 × 10⁻⁴',marks:1,calculator:'Calculator-free'},
-  {topicId:'t21',q:'A population of bacteria doubles every 3 hours. Starting at 500, find the population after 12 hours.',a:'8000',hint:'Geometric growth: P = 500 × 2^(t/3)',exp:'t = 12 → 500 × 2⁴ = 500 × 16 = 8000',marks:3,calculator:'Calculator-assumed'},
-  // 2.2 Sequences & Series
-  {topicId:'t22',q:'Find the 20th term of the arithmetic sequence 5, 8, 11, …',a:'t₂₀ = 62',hint:'tₙ = t₁ + (n−1)d',exp:'t₂₀ = 5 + 19 × 3 = 5 + 57 = 62',marks:2,calculator:'Calculator-free'},
-  {topicId:'t22',q:'Find the sum of the first 10 terms of 3, 6, 12, 24, …',a:'S₁₀ = 3069',hint:'Geometric series: Sₙ = t₁(rⁿ − 1)/(r − 1)',exp:'r = 2, Sₙ = 3(2¹⁰ − 1)/(2−1) = 3 × 1023 = 3069',marks:3,calculator:'Calculator-assumed'},
-  {topicId:'t22',q:'An arithmetic sequence has t₁ = 4 and t₅ = 20. Find the common difference d.',a:'d = 4',hint:'t₅ = t₁ + 4d',exp:'20 = 4 + 4d → 4d = 16 → d = 4',marks:2,calculator:'Calculator-free'},
-  {topicId:'t22',q:'A geometric sequence has t₁ = 2 and r = 3. Find t₆.',a:'t₆ = 486',hint:'tₙ = t₁ × r^(n−1)',exp:'t₆ = 2 × 3⁵ = 2 × 243 = 486',marks:2,calculator:'Calculator-free'},
-  {topicId:'t22',q:'Find the sum of the first 15 terms of the arithmetic series: 2 + 7 + 12 + …',a:'S₁₅ = 555',hint:'Sₙ = n/2 × (2t₁ + (n−1)d)',exp:'S₁₅ = 15/2 × (4 + 14×5) = 7.5 × 74 = 555',marks:3,calculator:'Calculator-assumed'},
-  {topicId:'t22',q:'$10 000 is invested at 6% p.a. compound interest. Find the value after 5 years.',a:'≈ $13 382.26',hint:'A = P(1 + r)ⁿ',exp:'A = 10000 × (1.06)⁵ ≈ 10000 × 1.33823 ≈ $13 382.26',marks:3,calculator:'Calculator-assumed'},
-  // 2.3 Differential Calculus
-  {topicId:'t23',q:'Differentiate f(x) = x⁵ − 3x² + 7.',a:"f'(x) = 5x⁴ − 6x",hint:'Power rule: d/dx(xⁿ) = nxⁿ⁻¹',exp:'5x⁴ − 6x + 0 = 5x⁴ − 6x',marks:2,calculator:'Calculator-free'},
-  {topicId:'t23',q:"Find the gradient of f(x) = x³ − 4x at x = 2.",a:'Gradient = 8',hint:"Differentiate, then substitute x = 2",exp:"f'(x) = 3x² − 4. f'(2) = 12 − 4 = 8",marks:2,calculator:'Calculator-free'},
-  {topicId:'t23',q:"Find the equation of the tangent to y = x² + 3 at x = 2.",a:'y = 4x − 1',hint:"Find y and f'(2), then use y − y₁ = m(x − x₁)",exp:"f(2) = 7, f'(x) = 2x, f'(2) = 4. y − 7 = 4(x−2) → y = 4x − 1",marks:3,calculator:'Calculator-free'},
-  {topicId:'t23',q:"Find the stationary points of f(x) = x³ − 3x.",a:'Stationary points at x = 1 (local min) and x = −1 (local max)',hint:"Set f'(x) = 0 and solve",exp:"f'(x) = 3x² − 3 = 0 → x² = 1 → x = ±1. f(1) = −2, f(−1) = 2",marks:4,calculator:'Calculator-free'},
-  {topicId:'t23',q:'Find the anti-derivative of f(x) = 6x² − 4x + 1.',a:'F(x) = 2x³ − 2x² + x + C',hint:'Increase each power by 1, divide by new power',exp:'∫(6x² − 4x + 1)dx = 2x³ − 2x² + x + C',marks:2,calculator:'Calculator-free'},
-  {topicId:'t23',q:'A particle has displacement s = t³ − 6t² + 9t. Find its velocity at t = 2.',a:'v = −3 m/s',hint:'v = ds/dt, then substitute t = 2',exp:'v = 3t² − 12t + 9. v(2) = 12 − 24 + 9 = −3',marks:3,calculator:'Calculator-free'},
-];
 
 // ══════════════════════════════════════════════════
 // STATE
@@ -479,20 +430,32 @@ function saveProgress() { try { localStorage.setItem('mc2_progress', JSON.string
 function getChapProgress(chId, qs) {
   const p = progress[chId] || {};
   const seen = Object.keys(p).length;
-  const correct = Object.values(p).filter(v=>v==='easy'||v==='good').length;
+  const correct = Object.values(p).filter(v=>{const r=entryRating(v);return r==='easy'||r==='good';}).length;
   const done = Math.min(seen, qs.length);
   return { done, total:qs.length, pct: qs.length > 0 ? Math.round(done/qs.length*100) : 0, acc: seen > 0 ? Math.round(correct/seen*100) : 0 };
 }
 
-// Group builtin questions by topic
-function getBuiltinChapters() {
-  const grouped = {};
-  BUILTIN.forEach((q,i) => {
-    const t = TOPIC_LIST.find(t=>t.id===q.topicId);
-    if (!grouped[q.topicId]) grouped[q.topicId] = { ...t, qs:[] };
-    grouped[q.topicId].qs.push({...q, _builtinIdx:i});
-  });
-  return Object.values(grouped);
+// ══════════════════════════════════════════════════
+// SPACED REPETITION (simple interval ladder, in days)
+// ══════════════════════════════════════════════════
+function entryRating(entry) { return entry && typeof entry === 'object' ? entry.r : entry; }
+function entryDue(entry) { return entry && typeof entry === 'object' ? entry.due : 0; }
+
+function nextInterval(prevIvl, rating) {
+  prevIvl = prevIvl || 0;
+  let ivl;
+  if (rating === 'again') ivl = 0;
+  else if (rating === 'hard') ivl = Math.max(1, Math.round((prevIvl || 1) * 1.2));
+  else if (rating === 'good') ivl = prevIvl > 0 ? Math.round(prevIvl * 2) : 2;
+  else ivl = prevIvl > 0 ? Math.round(prevIvl * 3) : 4; // easy
+  return Math.min(ivl, 90);
+}
+
+function isDue(chId, idx) {
+  const entry = (progress[chId] || {})[idx];
+  if (entry === undefined) return true; // never studied — due now
+  const due = entryDue(entry);
+  return !due || due <= Date.now();
 }
 
 function getPdfStudyChapters() {
@@ -504,10 +467,11 @@ function getPdfStudyChapters() {
       const topic = TOPIC_LIST.find(t => t.id === card.topicId);
       grouped[chId] = {
         id: chId,
-        name: `PDF Questions · ${card.topicName || topic?.name || 'Topic'}`,
-        icon: '🧾',
+        name: card.topicName || topic?.name || 'Topic',
+        icon: topic?.icon || '🧾',
         color: topic?.color || '#6c63ff',
         code: card.topicCode || topic?.code || '',
+        unit: topic?.unit,
         source: 'PDFs',
         qs: [],
       };
@@ -523,7 +487,7 @@ function getPdfStudyChapters() {
 }
 
 function allChapters() {
-  return [...getBuiltinChapters(), ...getPdfStudyChapters()];
+  return getPdfStudyChapters();
 }
 
 // ══════════════════════════════════════════════════
@@ -549,9 +513,11 @@ function renderHome() {
   allChapters().forEach(ch => {
     const p = progress[ch.id]||{};
     totalStudied += Object.keys(p).length;
-    totalCorrect += Object.values(p).filter(v=>v==='easy'||v==='good').length;
-    dueCount += Math.max(0, ch.qs.length - Object.keys(p).length);
+    totalCorrect += Object.values(p).filter(v=>{const r=entryRating(v);return r==='easy'||r==='good';}).length;
+    ch.qs.forEach((q,i)=>{ if(isDue(ch.id,i)) dueCount++; });
   });
+  const dueMeta = document.getElementById('dueCardMeta');
+  if (dueMeta) dueMeta.textContent = dueCount > 0 ? `${dueCount} card${dueCount!==1?'s':''} ready` : 'All caught up';
   const acc = totalStudied > 0 ? Math.round(totalCorrect/totalStudied*100)+'%' : '—';
   let bestName='—', bestAcc=0;
   allChapters().forEach(ch => {
@@ -565,31 +531,12 @@ function renderHome() {
     <div class="stat-card"><div class="stat-n" style="color:var(--accent)">${dueCount}</div><div class="stat-l">Cards due</div></div>
   `;
 
-  // Local resources
-  const resSec = document.getElementById('resourceSection');
-  if (resourcePairs.length > 0) {
-    resSec.innerHTML = `<div class="slabel">Local resources (${resourcePairs.length}) <div class="slabel-line"></div></div><div class="resource-grid" id="resourceGrid"></div>`;
-    resourcePairs.slice(0,6).forEach(pair => document.getElementById('resourceGrid').appendChild(buildResourceCard(pair)));
-  } else {
-    resSec.innerHTML = `<div class="empty-import" onclick="nav('resources')"><div style="font-size:24px;margin-bottom:6px">📁</div><div style="font-weight:600;margin-bottom:3px">No local resources loaded yet</div><div>Choose the methods folder to preview PDF questions and solutions →</div></div>`;
-  }
-
-  const pdfSec = document.getElementById('pdfStudySection');
+  // Topic chapters by unit (all sourced from imported PDF practice questions)
   const pdfChapters = getPdfStudyChapters();
-  if (pdfChapters.length > 0) {
-    const totalPdfCards = pdfChapters.reduce((sum, ch) => sum + ch.qs.length, 0);
-    pdfSec.innerHTML = `<div class="slabel">PDF Questions from folders (${totalPdfCards}) <div class="slabel-line"></div></div><div class="ch-grid" id="pdfStudyGrid"></div>`;
-    pdfChapters.forEach(ch => document.getElementById('pdfStudyGrid').appendChild(buildChCard(ch)));
-  } else {
-    pdfSec.innerHTML = '';
-  }
-
-  // Built-in chapters by unit
-  const builtins = getBuiltinChapters();
   const u1 = document.getElementById('unit1Grid'); u1.innerHTML='';
   const u2 = document.getElementById('unit2Grid'); u2.innerHTML='';
-  builtins.filter(ch=>ch.unit===1).forEach(ch=>u1.appendChild(buildChCard(ch)));
-  builtins.filter(ch=>ch.unit===2).forEach(ch=>u2.appendChild(buildChCard(ch)));
+  pdfChapters.filter(ch=>ch.unit===1).forEach(ch=>u1.appendChild(buildChCard(ch)));
+  pdfChapters.filter(ch=>ch.unit===2).forEach(ch=>u2.appendChild(buildChCard(ch)));
 
   // Streak
   const last = progress._lastStudy||'';
@@ -627,11 +574,11 @@ function startSession(chId) {
   const allQs = (chs) => chs.flatMap(ch=>ch.qs.map((q,i)=>({...q,_chId:ch.id,_chName:ch.name,_idx:i})));
 
   if (chId==='sem1') {
-    const chs = all.filter(ch=>UNIT1_IDS.includes(ch.id)||TOPICS[ch.code]?.unit===1);
+    const chs = all.filter(ch=>ch.unit===1);
     S.qs=shuffle(allQs(chs)); S.mode='sem1';
     document.getElementById('studyTitle').textContent='📘 Semester 1 Exam';
   } else if (chId==='sem2') {
-    const chs = all.filter(ch=>UNIT2_IDS.includes(ch.id)||TOPICS[ch.code]?.unit===2);
+    const chs = all.filter(ch=>ch.unit===2);
     S.qs=shuffle(allQs(chs)); S.mode='sem2';
     document.getElementById('studyTitle').textContent='📗 Semester 2 Exam';
   } else if (chId==='full') {
@@ -639,10 +586,16 @@ function startSession(chId) {
     document.getElementById('studyTitle').textContent='🎯 Full Year Shuffle';
   } else if (chId==='weak') {
     let weak=[];
-    all.forEach(ch=>{const p=progress[ch.id]||{};ch.qs.forEach((q,i)=>{if(p[i]==='again'||p[i]==='hard')weak.push({...q,_chId:ch.id,_chName:ch.name,_idx:i});});});
+    all.forEach(ch=>{const p=progress[ch.id]||{};ch.qs.forEach((q,i)=>{const rating=entryRating(p[i]);if(rating==='again'||rating==='hard')weak.push({...q,_chId:ch.id,_chName:ch.name,_idx:i});});});
     if(weak.length===0) weak=shuffle(allQs(all)).slice(0,15);
     S.qs=shuffle(weak); S.mode='weak';
     document.getElementById('studyTitle').textContent='💪 Weak Spots Drill';
+  } else if (chId==='due') {
+    let due=[];
+    all.forEach(ch=>{ch.qs.forEach((q,i)=>{if(isDue(ch.id,i))due.push({...q,_chId:ch.id,_chName:ch.name,_idx:i});});});
+    if(due.length===0){ toast('🎉 Nothing due right now — try a cram mode instead', true); return; }
+    S.qs=shuffle(due); S.mode='due';
+    document.getElementById('studyTitle').textContent='🧠 Due for Review';
   } else if (chId==='calcfree') {
     S.qs=shuffle(allQs(all).filter(q=>q.calculator==='Calculator-free')); S.mode='calcfree';
     document.getElementById('studyTitle').textContent='✏️ Calculator-Free Drill';
@@ -710,10 +663,11 @@ function revealCard(){
 
 function rate(r){
   const q=S.qs[S.idx];
-  if(S.mode==='chapter'){
-    if(!progress[q._chId])progress[q._chId]={};
-    progress[q._chId][q._idx]=r;
-  }
+  if(!progress[q._chId])progress[q._chId]={};
+  const prevEntry=progress[q._chId][q._idx];
+  const prevIvl=(prevEntry&&typeof prevEntry==='object')?(prevEntry.ivl||0):0;
+  const ivl=nextInterval(prevIvl,r);
+  progress[q._chId][q._idx]={r,ivl,due:Date.now()+ivl*86400000};
   if(r==='easy'||r==='good')S.results.easy++;
   else if(r==='hard')S.results.hard++;
   else S.results.again++;
@@ -759,16 +713,11 @@ function renderProgress(){
     card.innerHTML=`<div class="prog-row"><div class="prog-icon">${ch.icon||'📘'}</div><div class="prog-info"><div class="prog-name">${ch.code?'<span style="font-size:10px;color:var(--accent);font-weight:700">'+ch.code+' </span>':''}${ch.name}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${barColor}"></div></div><div class="prog-detail">${done}/${total} studied · ${acc>0?acc+'% accuracy':'Not started'}</div></div><div class="prog-pct" style="color:${barColor}">${pct}%</div></div>`;
     list.appendChild(card);
   };
-  const builtins=getBuiltinChapters();
-  addLabel('Unit 1 — Semester 1');
-  builtins.filter(ch=>ch.unit===1).forEach(addCard);
-  addLabel('Unit 2 — Semester 2');
-  builtins.filter(ch=>ch.unit===2).forEach(addCard);
   const pdfChapters = getPdfStudyChapters();
-  if(pdfChapters.length>0){
-    addLabel('PDF Questions from folders');
-    pdfChapters.forEach(addCard);
-  }
+  addLabel('Unit 1 — Semester 1');
+  pdfChapters.filter(ch=>ch.unit===1).forEach(addCard);
+  addLabel('Unit 2 — Semester 2');
+  pdfChapters.filter(ch=>ch.unit===2).forEach(addCard);
 }
 
 // ══════════════════════════════════════════════════

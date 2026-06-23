@@ -32,6 +32,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 .nav-pill.active{background:var(--surf3);color:var(--txt)}
 .streak{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--amber);background:var(--surf2);border:1px solid var(--brd);padding:4px 11px;border-radius:20px}
 
+/* VIEW TOGGLE (topics vs book chapters) */
+.view-toggle{display:inline-flex;gap:3px;background:var(--surf2);border:1px solid var(--brd);border-radius:20px;padding:3px}
+.vt-btn{padding:6px 14px;border-radius:17px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s}
+.vt-btn:hover{color:var(--txt)}
+.vt-btn.active{background:var(--accent);color:#fff}
+
 /* LAYOUT */
 .view{display:none;padding:24px;max-width:880px;margin:0 auto}
 .view.active{display:block}
@@ -228,6 +234,8 @@ select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);pad
 <div class="view active anim" id="view-home">
   <div class="stat-row" id="statsRow"></div>
 
+  <div class="view-toggle" style="margin-bottom:18px"></div>
+
   <!-- UNIT 1 — Semester 1 -->
   <div class="slabel">Unit 1 — Semester 1 <div class="slabel-line"></div></div>
   <div class="ch-grid" id="unit1Grid"></div>
@@ -261,7 +269,7 @@ select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);pad
       <div class="ch-top" style="background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
       <div class="ch-icon">🎯</div>
       <div class="ch-name">Full Year Shuffle</div>
-      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">All 6 topics mixed</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px" id="fullShuffleMeta">All 6 topics mixed</div>
     </div>
     <div class="exam-card weak" onclick="startSession('weak')">
       <div class="ch-top" style="background:linear-gradient(90deg,#ef4444,#6c63ff)"></div>
@@ -341,6 +349,7 @@ select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);pad
 
 <!-- ═══════════════════════════ PROGRESS ═══════════════════════════ -->
 <div class="view" id="view-progress">
+  <div class="view-toggle" style="margin-bottom:14px"></div>
   <div class="slabel" style="margin-top:4px">Your Progress <div class="slabel-line"></div></div>
   <div id="progressList"></div>
 </div>
@@ -410,9 +419,65 @@ const TOPICS = {
 const TOPIC_LIST = Object.values(TOPICS);
 
 // ══════════════════════════════════════════════════
+// BOOK CHAPTERS — 18 textbook chapters, mapped onto the 6 syllabus topics above
+// ══════════════════════════════════════════════════
+const CHAPTERS = [
+  {id:'u1-1',unit:1,num:1,name:'Trigonometry',parentTopic:'t13',icon:'📐',
+    kw:['trigonometry','right-angled','right angled','sine rule','cosine rule','area of a triangle','bearing','elevation','depression','pythagoras','soh cah toa']},
+  {id:'u1-2',unit:1,num:2,name:'Radian measure',parentTopic:'t13',icon:'📐',
+    kw:['radian','arc length','sector area','rad ','convert to radians','degrees to radians','unit circle']},
+  {id:'u1-3',unit:1,num:3,name:'Functions',parentTopic:'t12',icon:'📈',
+    kw:['function notation','one-to-one','many-to-one','inverse function','composite function','piecewise','vertical line test','relation','even function','odd function','domain','range']},
+  {id:'u1-4',unit:1,num:4,name:'Linear functions',parentTopic:'t12',icon:'📈',
+    kw:['linear function','gradient','straight line','midpoint','perpendicular','parallel lines','simultaneous equations','linear equation','distance formula','collinear']},
+  {id:'u1-5',unit:1,num:5,name:'Quadratic functions',parentTopic:'t12',icon:'📈',
+    kw:['quadratic function','parabola','turning point','vertex','axis of symmetry','completing the square','vertex form','maximum value','minimum value']},
+  {id:'u1-6',unit:1,num:6,name:'Quadratic equations',parentTopic:'t12',icon:'📈',
+    kw:['quadratic equation','factorise','quadratic formula','discriminant','roots','zeros','null factor law','sum and product of roots']},
+  {id:'u1-7',unit:1,num:7,name:'Polynomials and other functions',parentTopic:'t12',icon:'📈',
+    kw:['polynomial','cubic','quartic','hyperbola','square root function','remainder theorem','factor theorem','degree of the polynomial','leading coefficient']},
+  {id:'u1-8',unit:1,num:8,name:'Trigonometric functions',parentTopic:'t13',icon:'📐',
+    kw:['amplitude','period','phase','sine graph','cosine graph','tan graph','trig identity','trigonometric equation','exact value','sin(','cos(','tan(']},
+  {id:'u1-9',unit:1,num:9,name:'Sets and Probability',parentTopic:'t11',icon:'🎲',
+    kw:['set notation','union','intersection','complement','venn diagram','sample space','probability','conditional probability','independent events','mutually exclusive','tree diagram']},
+  {id:'u1-10',unit:1,num:10,name:'Counting',parentTopic:'t11',icon:'🎲',
+    kw:['counting','permutation','combination','factorial','pascal','binomial','multiplication principle','arrangement','selection','ncr']},
+  {id:'u2-1',unit:2,num:1,name:'Indices',parentTopic:'t21',icon:'📊',
+    kw:['index law','indices','negative index','fractional index','rational index','surd','exponent law']},
+  {id:'u2-2',unit:2,num:2,name:'Exponential functions',parentTopic:'t21',icon:'📊',
+    kw:['exponential function','exponential growth','exponential decay','base e','half-life','compound growth','exponential equation','e^']},
+  {id:'u2-3',unit:2,num:3,name:'Sequences',parentTopic:'t22',icon:'🔢',
+    kw:['sequence','arithmetic sequence','geometric sequence','common difference','common ratio','nth term','recursive','term of the sequence']},
+  {id:'u2-4',unit:2,num:4,name:'Series',parentTopic:'t22',icon:'🔢',
+    kw:['series','arithmetic series','geometric series','sigma notation','converge','limiting sum','partial sum','compound interest','simple interest']},
+  {id:'u2-5',unit:2,num:5,name:'Rates of change',parentTopic:'t23',icon:'∫',
+    kw:['average rate of change','instantaneous rate','rate of change','difference quotient','first principles','gradient of a curve','secant']},
+  {id:'u2-6',unit:2,num:6,name:'Applications of differentiation',parentTopic:'t23',icon:'∫',
+    kw:['stationary point','optimisation','optimization','increasing function','decreasing function','tangent line','normal line','second derivative','point of inflection','concavity','maximum','minimum']},
+  {id:'u2-7',unit:2,num:7,name:'Antidifferentiation',parentTopic:'t23',icon:'∫',
+    kw:['antiderivative','antidifferentiate','indefinite integral','integration','reverse of differentiation','constant of integration','+c']},
+  {id:'u2-8',unit:2,num:8,name:'Rectilinear motion',parentTopic:'t23',icon:'∫',
+    kw:['displacement','velocity','acceleration','rectilinear motion','particle','at rest','direction of motion','distance travelled','s(t)','v(t)','a(t)']},
+];
+const CHAPTER_LIST = CHAPTERS;
+
+function inferBookChapterId(card){
+  const candidates = CHAPTER_LIST.filter(c=>c.parentTopic===card.topicId);
+  if(!candidates.length) return '';
+  const text = `${card.questionText||card.q||''} ${card.title||''} ${card.sourceTitle||''}`.toLowerCase();
+  let best=candidates[0], bestScore=0;
+  candidates.forEach(ch=>{
+    const score = ch.kw.reduce((n,kw)=>n+(text.includes(kw)?1:0),0);
+    if(score>bestScore){bestScore=score;best=ch;}
+  });
+  return best.id;
+}
+
+// ══════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════
 let progress = {};
+let viewMode = localStorage.getItem('mc2_viewMode') || 'topic'; // 'topic' | 'chapter'
 let resourcePairs = Array.isArray(window.RESOURCE_MANIFEST) ? [...window.RESOURCE_MANIFEST] : [];
 let pdfStudyCards = Array.isArray(window.PDF_STUDY_MANIFEST) ? [...window.PDF_STUDY_MANIFEST] : [];
 let resourceFiles = [];
@@ -465,12 +530,14 @@ function getPdfStudyChapters() {
     const chId = `pdf-${card.topicId}`;
     if (!grouped[chId]) {
       const topic = TOPIC_LIST.find(t => t.id === card.topicId);
+      const code = card.topicCode || topic?.code || '';
       grouped[chId] = {
         id: chId,
         name: card.topicName || topic?.name || 'Topic',
         icon: topic?.icon || '🧾',
         color: topic?.color || '#6c63ff',
-        code: card.topicCode || topic?.code || '',
+        code,
+        badge: code ? `Topic ${code}` : '',
         unit: topic?.unit,
         source: 'PDFs',
         qs: [],
@@ -486,8 +553,66 @@ function getPdfStudyChapters() {
   return Object.values(grouped);
 }
 
+function getPdfStudyBookChapters() {
+  const grouped = {};
+  pdfStudyCards.forEach(card => {
+    if (!card.topicId) return;
+    const chMeta = CHAPTER_LIST.find(c => c.id === card._chapterId);
+    if (!chMeta) return;
+    const chId = `pdf-bk-${chMeta.id}`;
+    if (!grouped[chId]) {
+      grouped[chId] = {
+        id: chId,
+        name: chMeta.name,
+        icon: chMeta.icon,
+        color: TOPIC_LIST.find(t => t.id === chMeta.parentTopic)?.color || '#6c63ff',
+        code: `Ch ${chMeta.num}`,
+        badge: `Chapter ${chMeta.num}`,
+        num: chMeta.num,
+        unit: chMeta.unit,
+        source: 'PDFs',
+        qs: [],
+      };
+    }
+    grouped[chId].qs.push({
+      ...card,
+      _chId: chId,
+      _chName: grouped[chId].name,
+      _idx: grouped[chId].qs.length,
+    });
+  });
+  return Object.values(grouped).sort((a, b) => a.unit - b.unit || a.num - b.num);
+}
+
 function allChapters() {
-  return getPdfStudyChapters();
+  return viewMode === 'chapter' ? getPdfStudyBookChapters() : getPdfStudyChapters();
+}
+
+// ══════════════════════════════════════════════════
+// VIEW TOGGLE — syllabus topics vs. textbook chapters
+// ══════════════════════════════════════════════════
+function precomputeChapterIds() {
+  pdfStudyCards.forEach(card => {
+    if (card.topicId) card._chapterId = inferBookChapterId(card);
+  });
+}
+
+function renderViewToggles() {
+  const html = `
+    <button class="vt-btn ${viewMode==='topic'?'active':''}" onclick="setViewMode('topic')">📂 Syllabus topics</button>
+    <button class="vt-btn ${viewMode==='chapter'?'active':''}" onclick="setViewMode('chapter')">📖 Book chapters</button>
+  `;
+  document.querySelectorAll('.view-toggle').forEach(el => el.innerHTML = html);
+}
+
+function setViewMode(mode) {
+  if (mode === viewMode) return;
+  viewMode = mode;
+  try { localStorage.setItem('mc2_viewMode', mode); } catch(e) {}
+  renderViewToggles();
+  const activeView = document.querySelector('.view.active')?.id;
+  if (activeView === 'view-home') renderHome();
+  if (activeView === 'view-progress') renderProgress();
 }
 
 // ══════════════════════════════════════════════════
@@ -508,6 +633,7 @@ function nav(page) {
 // HOME
 // ══════════════════════════════════════════════════
 function renderHome() {
+  renderViewToggles();
   // Stats
   let totalStudied=0, totalCorrect=0, dueCount=0;
   allChapters().forEach(ch => {
@@ -531,12 +657,15 @@ function renderHome() {
     <div class="stat-card"><div class="stat-n" style="color:var(--accent)">${dueCount}</div><div class="stat-l">Cards due</div></div>
   `;
 
-  // Topic chapters by unit (all sourced from imported PDF practice questions)
-  const pdfChapters = getPdfStudyChapters();
+  // Chapters by unit (grouped by syllabus topic or textbook chapter, per the active toggle)
+  const pdfChapters = allChapters();
   const u1 = document.getElementById('unit1Grid'); u1.innerHTML='';
   const u2 = document.getElementById('unit2Grid'); u2.innerHTML='';
   pdfChapters.filter(ch=>ch.unit===1).forEach(ch=>u1.appendChild(buildChCard(ch)));
   pdfChapters.filter(ch=>ch.unit===2).forEach(ch=>u2.appendChild(buildChCard(ch)));
+
+  const shuffleMeta = document.getElementById('fullShuffleMeta');
+  if (shuffleMeta) shuffleMeta.textContent = viewMode==='chapter' ? 'All 18 chapters mixed' : 'All 6 topics mixed';
 
   // Streak
   const last = progress._lastStudy||'';
@@ -554,7 +683,7 @@ function buildChCard(ch) {
   card.innerHTML=`
     <div class="ch-top" style="background:${ch.color}"></div>
     <div class="ch-icon">${ch.icon}</div>
-    ${ch.code?`<div class="ch-code">Topic ${ch.code}</div>`:''}
+    ${ch.badge?`<div class="ch-code">${ch.badge}</div>`:''}
     <div class="ch-name">${ch.name}</div>
     <div class="ch-meta">${total} cards${ch.source?' · '+ch.source.substring(0,22):''}</div>
     <div class="ch-bar"><div class="ch-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
@@ -621,8 +750,10 @@ function showCard() {
   if (S.idx>=S.qs.length){showDone();return;}
   const q=S.qs[S.idx]; S.revealed=false;
   document.getElementById('studyMeta').textContent=`${S.idx+1} / ${S.qs.length}`;
+  const bookCh = CHAPTER_LIST.find(c=>`pdf-bk-${c.id}`===q._chId);
   const topic = TOPIC_LIST.find(t=>t.id===q.topicId||t.id===q._chId);
-  document.getElementById('fcTopic').textContent = topic ? `Topic ${topic.code} · ${topic.name}` : (q._chName||'');
+  document.getElementById('fcTopic').textContent = bookCh ? `Chapter ${bookCh.num} · ${bookCh.name}`
+    : topic ? `Topic ${topic.code} · ${topic.name}` : (q._chName||'');
   if(q.questionImage){
     document.getElementById('fcQ').innerHTML = `<div style="width:100%"><img src="${q.questionImage}" alt="${escHtml(q.title || 'PDF question')}" style="width:100%;border-radius:10px;border:1px solid var(--brd);background:#fff;max-height:56vh;object-fit:contain"><div style="margin-top:10px;font-size:12px;color:var(--muted)">${escHtml(q.questionText || q.q || q.title || '')}</div></div>`;
   } else {
@@ -704,16 +835,17 @@ function endSession(){nav('home');}
 // PROGRESS
 // ══════════════════════════════════════════════════
 function renderProgress(){
+  renderViewToggles();
   const list=document.getElementById('progressList'); list.innerHTML='';
   const addLabel=(txt)=>{const d=document.createElement('div');d.className='prog-unit-label';d.textContent=txt;list.appendChild(d);};
   const addCard=(ch)=>{
     const {pct,done,total,acc}=getChapProgress(ch.id,ch.qs);
     const barColor=pct>70?'#22c55e':pct>30?'#f59e0b':'#6c63ff';
     const card=document.createElement('div'); card.className='prog-card';
-    card.innerHTML=`<div class="prog-row"><div class="prog-icon">${ch.icon||'📘'}</div><div class="prog-info"><div class="prog-name">${ch.code?'<span style="font-size:10px;color:var(--accent);font-weight:700">'+ch.code+' </span>':''}${ch.name}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${barColor}"></div></div><div class="prog-detail">${done}/${total} studied · ${acc>0?acc+'% accuracy':'Not started'}</div></div><div class="prog-pct" style="color:${barColor}">${pct}%</div></div>`;
+    card.innerHTML=`<div class="prog-row"><div class="prog-icon">${ch.icon||'📘'}</div><div class="prog-info"><div class="prog-name">${ch.badge?'<span style="font-size:10px;color:var(--accent);font-weight:700">'+ch.badge+' </span>':''}${ch.name}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${barColor}"></div></div><div class="prog-detail">${done}/${total} studied · ${acc>0?acc+'% accuracy':'Not started'}</div></div><div class="prog-pct" style="color:${barColor}">${pct}%</div></div>`;
     list.appendChild(card);
   };
-  const pdfChapters = getPdfStudyChapters();
+  const pdfChapters = allChapters();
   addLabel('Unit 1 — Semester 1');
   pdfChapters.filter(ch=>ch.unit===1).forEach(addCard);
   addLabel('Unit 2 — Semester 2');
@@ -1196,6 +1328,7 @@ loadState();
 if (Array.isArray(window.RESOURCE_MANIFEST) && window.RESOURCE_MANIFEST.length > 0) {
   resourcePairs = [...window.RESOURCE_MANIFEST];
 }
+precomputeChapterIds();
 renderHome();
 </script>
 </body>

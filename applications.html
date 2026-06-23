@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>MathsCard — Year 11 Applications</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--surf:#13151f;--surf2:#1c1f2e;--surf3:#252838;
+  --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
+  --txt:#e4e6f0;--muted:#7b7f96;
+  --accent:#6c63ff;--aglow:rgba(108,99,255,0.18);
+  --green:#22c55e;--gbg:rgba(34,197,94,0.1);
+  --red:#ef4444;--rbg:rgba(239,68,68,0.1);
+  --amber:#f59e0b;--abg:rgba(245,158,11,0.1);
+  --blue:#3b82f6;--bbg:rgba(59,130,246,0.1);
+  --teal:#14b8a6;
+  --r:12px;--rsm:7px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* NAV */
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:54px;background:var(--surf);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:50}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;text-decoration:none}
+.brand-name{font-size:15px;font-weight:600}
+.brand-sub{font-size:10px;color:var(--muted)}
+.nav-pills{display:flex;gap:3px}
+.nav-pill{padding:6px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s}
+.nav-pill:hover{color:var(--txt)}
+.nav-pill.active{background:var(--surf3);color:var(--txt)}
+.streak{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--amber);background:var(--surf2);border:1px solid var(--brd);padding:4px 11px;border-radius:20px}
+
+/* VIEW TOGGLE (topics vs book chapters) */
+.view-toggle{display:inline-flex;gap:3px;background:var(--surf2);border:1px solid var(--brd);border-radius:20px;padding:3px}
+.vt-btn{padding:6px 14px;border-radius:17px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s}
+.vt-btn:hover{color:var(--txt)}
+.vt-btn.active{background:var(--accent);color:#fff}
+
+/* LAYOUT */
+.view{display:none;padding:24px;max-width:880px;margin:0 auto}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .22s ease}
+
+/* SECTION LABEL */
+.slabel{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.slabel-line{flex:1;height:1px;background:var(--brd)}
+
+/* STATS */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}
+.stat-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--rsm);padding:13px 15px}
+.stat-n{font-size:21px;font-weight:700;margin-bottom:2px}
+.stat-l{font-size:11px;color:var(--muted)}
+
+/* CHAPTER CARDS */
+.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:11px;margin-bottom:26px}
+.ch-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;overflow:hidden}
+.ch-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ch-top{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.ch-icon{font-size:20px;margin:4px 0 8px}
+.ch-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.ch-code{font-size:10px;font-weight:700;color:var(--accent);margin-bottom:2px}
+.ch-meta{font-size:11px;color:var(--muted);margin-bottom:11px}
+.ch-bar{height:4px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:5px}
+.ch-bar-fill{height:100%;border-radius:2px;transition:width .4s}
+.ch-nums{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+
+/* EXAM MODE CARDS */
+.exam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:11px;margin-bottom:26px}
+.exam-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:16px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;overflow:hidden}
+.exam-card:hover{transform:translateY(-2px)}
+.exam-card.s1{border-color:rgba(59,130,246,.3)}.exam-card.s1:hover{border-color:var(--blue)}
+.exam-card.s2{border-color:rgba(20,184,166,.3)}.exam-card.s2:hover{border-color:var(--teal)}
+.exam-card.full{border-color:rgba(245,158,11,.3)}.exam-card.full:hover{border-color:var(--amber)}
+.exam-card.weak{border-color:rgba(239,68,68,.3)}.exam-card.weak:hover{border-color:var(--red)}
+.exam-card.due{border-color:rgba(34,197,94,.3)}.exam-card.due:hover{border-color:var(--green)}
+.exam-card.calc{border-color:rgba(108,99,255,.3)}.exam-card.calc:hover{border-color:var(--accent)}
+
+/* RESOURCE PREVIEW */
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.resource-card{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .12s,transform .1s}
+.resource-card:hover{border-color:var(--brd2);transform:translateY(-1px)}
+.resource-card.sel{border-color:var(--accent);background:var(--aglow)}
+.resource-title{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:6px}
+.resource-meta{font-size:11px;color:var(--muted);line-height:1.45;margin-bottom:10px}
+.resource-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.resource-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700}
+.resource-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.resource-frame{background:var(--surf);border:1px solid var(--brd);border-radius:var(--rsm);overflow:auto;min-height:360px;max-height:72vh}
+.resource-frame h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--brd)}
+.resource-frame iframe,.resource-frame img{width:100%;height:auto;border:0;background:#fff;display:block}
+.resource-panel{display:flex;flex-direction:column;gap:12px}
+
+/* FLASHCARD */
+.study-header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.study-title{font-size:19px;font-weight:700;flex:1}
+.mini-bar{display:flex;gap:14px;align-items:center;background:var(--surf);border:1px solid var(--brd);border-radius:var(--rsm);padding:9px 15px;margin-bottom:16px;font-size:12px;flex-wrap:wrap}
+.mini-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.calc-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;margin-left:auto;flex-shrink:0}
+.calc-free{background:var(--abg);color:var(--amber)}
+.calc-assumed{background:var(--gbg);color:var(--green)}
+
+.flashcard{background:var(--surf);border:1px solid var(--brd);border-radius:16px;min-height:290px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 42px;text-align:center;cursor:pointer;position:relative;transition:border-color .2s;margin-bottom:16px}
+.flashcard:hover{border-color:var(--brd2)}
+.flashcard.revealed{cursor:default;border-color:var(--brd2)}
+.fc-corner{position:absolute;top:14px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fc-corner.left{left:16px}.fc-corner.right{right:16px}
+.fc-calc{position:absolute;bottom:14px;right:16px;font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px}
+.fc-topic{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:12px;color:var(--accent);opacity:.75}
+.fc-q{font-size:17px;font-weight:500;line-height:1.55;color:var(--txt)}
+.fc-hint{font-size:12px;color:var(--muted);margin-top:14px}
+.fc-divider{width:34px;height:2px;background:var(--brd2);margin:18px auto;border-radius:1px}
+.fc-a{font-size:16px;font-weight:500;line-height:1.5;color:#a8a2ff}
+.fc-exp{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.65}
+.fc-marks{font-size:11px;color:var(--muted);margin-top:8px}
+
+.reveal-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:var(--rsm);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .15s}
+.reveal-btn:hover{opacity:.88}
+.rating-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.rb{padding:10px 6px;border-radius:var(--rsm);border:1px solid var(--brd);background:var(--surf);color:var(--txt);font-size:13px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.rb:hover{transform:translateY(-1px)}
+.rb.again{border-color:rgba(239,68,68,.4);color:var(--red)}.rb.again:hover{background:var(--rbg)}
+.rb.hard{border-color:rgba(245,158,11,.4);color:var(--amber)}.rb.hard:hover{background:var(--abg)}
+.rb.good{border-color:rgba(59,130,246,.4);color:var(--blue)}.rb.good:hover{background:var(--bbg)}
+.rb.easy{border-color:rgba(34,197,94,.4);color:var(--green)}.rb.easy:hover{background:var(--gbg)}
+.rl{font-size:10px;font-weight:400;opacity:.6;display:block;margin-top:2px}
+
+/* DONE */
+.done-card{background:var(--surf);border:1px solid var(--brd);border-radius:16px;padding:40px 32px;text-align:center}
+.done-emoji{font-size:42px;margin-bottom:12px}
+.done-title{font-size:21px;font-weight:700;margin-bottom:5px}
+.done-sub{font-size:13px;color:var(--muted);margin-bottom:22px}
+.done-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.done-stat{background:var(--surf2);border-radius:var(--rsm);padding:13px}
+.done-stat-n{font-size:21px;font-weight:700}
+.done-stat-l{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* PROGRESS */
+.prog-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:15px 17px;margin-bottom:9px}
+.prog-row{display:flex;align-items:center;gap:12px}
+.prog-icon{font-size:17px;flex-shrink:0;min-width:26px}
+.prog-info{flex:1}
+.prog-name{font-size:13px;font-weight:600;margin-bottom:5px}
+.prog-bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px}
+.prog-fill{height:100%;border-radius:3px;transition:width .5s}
+.prog-pct{font-size:13px;font-weight:600;min-width:34px;text-align:right}
+.prog-detail{font-size:11px;color:var(--muted);margin-top:4px}
+.prog-unit-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+
+/* IMPORT */
+.import-wrap{display:grid;grid-template-columns:220px 1fr;gap:18px;min-height:calc(100vh - 110px)}
+.import-sidebar{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:14px;align-self:start;position:sticky;top:70px}
+.isb-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.folder-btn{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--rsm);cursor:pointer;font-size:12px;color:var(--muted);transition:background .12s,color .12s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:none;background:none;width:100%;text-align:left}
+.folder-btn:hover{background:var(--surf2);color:var(--txt)}
+.folder-btn.active{background:var(--aglow);color:#fff}
+.import-main{display:flex;flex-direction:column;gap:14px}
+.import-card{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:18px}
+.import-card h3{font-size:13px;font-weight:600;margin-bottom:13px;display:flex;align-items:center;gap:8px}
+.sbadge{width:20px;height:20px;border-radius:50%;background:var(--surf2);border:1px solid var(--brd2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0}
+.sbadge.done{background:var(--gbg);border-color:var(--green);color:var(--green)}
+.sbadge.act{background:var(--aglow);border-color:var(--accent);color:var(--accent)}
+.file-row{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:var(--rsm);border:1px solid var(--brd);background:var(--surf2);cursor:pointer;font-size:12px;transition:border-color .12s;margin-bottom:5px}
+.file-row:hover{border-color:var(--brd2)}
+.file-row.sel{border-color:var(--accent);background:var(--aglow)}
+.file-row .fname{flex:1;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ftag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0}
+.ftag-s{background:var(--gbg);color:var(--green)}
+.ftag-e{background:var(--abg);color:var(--amber)}
+.sf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px}
+.sf-card{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rsm);padding:11px;cursor:pointer;transition:border-color .12s,transform .1s;text-align:center}
+.sf-card:hover{border-color:var(--brd2);transform:translateY(-1px)}
+.sf-card.sel{border-color:var(--accent);background:var(--aglow)}
+.sf-icon{font-size:18px;margin-bottom:5px}
+.sf-name{font-size:11px;color:var(--txt);font-weight:500}
+.pbar-wrap{height:4px;background:var(--surf3);border-radius:2px;margin:12px 0;overflow:hidden}
+.pbar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .35s}
+.logbox{background:var(--surf2);border-radius:var(--rsm);padding:9px 11px;font-size:11px;font-family:'SF Mono','Fira Code',monospace;color:var(--muted);max-height:110px;overflow-y:auto;line-height:1.75;margin-top:10px}
+.logbox .ok{color:var(--green)}.logbox .err{color:var(--red)}.logbox .info{color:var(--blue)}
+.prev-topic{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 7px;display:flex;align-items:center;gap:7px}
+.prev-pill{background:var(--surf2);border-radius:10px;font-size:10px;padding:1px 7px;font-weight:400}
+.prev-card{background:var(--surf2);border:1px solid var(--brd);border-radius:var(--rsm);padding:11px 13px;margin-bottom:5px;font-size:12px}
+.pc-q{font-weight:500;margin-bottom:4px}
+.pc-a{color:#a8a2ff;margin-bottom:3px}
+.pc-exp{color:var(--muted);font-size:11px}
+.pc-badges{display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap}
+.pc-badge{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:600}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 17px;border-radius:var(--rsm);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .15s,transform .1s}
+.btn:hover{opacity:.87;transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-p{background:var(--accent);color:#fff}
+.btn-s{background:var(--surf2);color:var(--txt);border:1px solid var(--brd2)}
+.btn-g{background:var(--green);color:#fff}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--surf3);border:1px solid var(--brd2);border-radius:var(--r);padding:10px 15px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,.45);transform:translateY(60px);opacity:0;transition:transform .3s,opacity .3s;z-index:200}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{border-color:var(--green);color:var(--green)}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:13px;height:13px;border:2px solid var(--brd2);border-top-color:var(--accent);border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0;display:inline-block}
+
+select{background:var(--surf2);border:1px solid var(--brd2);color:var(--txt);padding:7px 26px 7px 9px;border-radius:var(--rsm);font-size:12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%237b7f96' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:2px}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand">
+    <a class="brand-icon" href="index.html" title="Back to subjects">∑</a>
+    <div><div class="brand-name">MathsCard</div><div class="brand-sub">Year 11 Applications · wace.page</div></div>
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill active" onclick="nav('home')">📚 Study</button>
+    <button class="nav-pill" onclick="nav('progress')">📊 Progress</button>
+    <button class="nav-pill" onclick="nav('resources')">📁 Resources</button>
+  </div>
+  <div class="streak">🔥 <span id="streakNum">0</span> day streak</div>
+</nav>
+
+<!-- ═══════════════════════════ HOME ═══════════════════════════ -->
+<div class="view active anim" id="view-home">
+  <div class="stat-row" id="statsRow"></div>
+
+  <div class="view-toggle" style="margin-bottom:18px"></div>
+
+  <!-- UNIT 1 — Semester 1 -->
+  <div class="slabel">Unit 1 — Semester 1 <div class="slabel-line"></div></div>
+  <div class="ch-grid" id="unit1Grid"></div>
+
+  <!-- UNIT 2 — Semester 2 -->
+  <div class="slabel">Unit 2 — Semester 2 <div class="slabel-line"></div></div>
+  <div class="ch-grid" id="unit2Grid"></div>
+
+  <!-- EXAM MODES -->
+  <div class="slabel">Exam Modes <div class="slabel-line"></div></div>
+  <div class="exam-grid">
+    <div class="exam-card due" onclick="startSession('due')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#22c55e,#14b8a6)"></div>
+      <div class="ch-icon">🧠</div>
+      <div class="ch-name">Due for Review</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px" id="dueCardMeta">Spaced repetition queue</div>
+    </div>
+    <div class="exam-card s1" onclick="startSession('sem1')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#3b82f6,#6c63ff)"></div>
+      <div class="ch-icon">📘</div>
+      <div class="ch-name">Semester 1 Exam</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">Topics 1.1 · 1.2 · 1.3</div>
+    </div>
+    <div class="exam-card s2" onclick="startSession('sem2')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#14b8a6,#3b82f6)"></div>
+      <div class="ch-icon">📗</div>
+      <div class="ch-name">Semester 2 Exam</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">Topics 2.1 · 2.2 · 2.3</div>
+    </div>
+    <div class="exam-card full" onclick="startSession('full')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#f59e0b,#ef4444)"></div>
+      <div class="ch-icon">🎯</div>
+      <div class="ch-name">Full Year Shuffle</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px" id="fullShuffleMeta">All 6 topics mixed</div>
+    </div>
+    <div class="exam-card weak" onclick="startSession('weak')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#ef4444,#6c63ff)"></div>
+      <div class="ch-icon">💪</div>
+      <div class="ch-name">Weak Spots Drill</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">Again + Hard cards only</div>
+    </div>
+    <div class="exam-card calc" onclick="startSession('calcfree')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#6c63ff,#f59e0b)"></div>
+      <div class="ch-icon">✏️</div>
+      <div class="ch-name">Calculator-Free Drill</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">Section 1 questions only</div>
+    </div>
+    <div class="exam-card calc" onclick="startSession('calcassumed')">
+      <div class="ch-top" style="background:linear-gradient(90deg,#22c55e,#3b82f6)"></div>
+      <div class="ch-icon">🖩</div>
+      <div class="ch-name">Calculator-Assumed Drill</div>
+      <div class="ch-meta" style="font-size:11px;color:var(--muted);margin-top:3px">Section 2 questions only</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ STUDY ═══════════════════════════ -->
+<div class="view" id="view-study">
+  <div class="study-header">
+    <button class="btn btn-s" onclick="endSession()" style="padding:5px 11px;font-size:12px">← Back</button>
+    <div class="study-title" id="studyTitle"></div>
+    <div style="font-size:12px;color:var(--muted)" id="studyMeta"></div>
+  </div>
+
+  <div class="mini-bar">
+    <span><span class="mini-dot" style="background:var(--green)"></span><span id="mEasy">0</span> easy</span>
+    <span><span class="mini-dot" style="background:var(--amber)"></span><span id="mHard">0</span> hard</span>
+    <span><span class="mini-dot" style="background:var(--red)"></span><span id="mAgain">0</span> again</span>
+  </div>
+
+  <div class="flashcard anim" id="flashcard" onclick="revealCard()">
+    <div class="fc-corner left" id="fcLabel">Question</div>
+    <div class="fc-corner right" id="fcSrc"></div>
+    <div class="fc-calc" id="fcCalc"></div>
+    <div class="fc-topic" id="fcTopic"></div>
+    <div class="fc-q" id="fcQ"></div>
+    <div class="fc-hint" id="fcHint">Tap to reveal answer</div>
+    <div id="fcAWrap" style="display:none;width:100%">
+      <div class="fc-divider"></div>
+      <div class="fc-a" id="fcA"></div>
+      <div class="fc-exp" id="fcExp"></div>
+      <div class="fc-marks" id="fcMarks"></div>
+    </div>
+  </div>
+
+  <div id="revealArea"><button class="reveal-btn" onclick="revealCard()">Show Answer</button></div>
+  <div id="ratingArea" style="display:none">
+    <div class="rating-row">
+      <button class="rb again" onclick="rate('again')">Again<span class="rl">Didn't get it</span></button>
+      <button class="rb hard" onclick="rate('hard')">Hard<span class="rl">Tricky</span></button>
+      <button class="rb good" onclick="rate('good')">Good<span class="rl">Got it</span></button>
+      <button class="rb easy" onclick="rate('easy')">Easy<span class="rl">Too simple</span></button>
+    </div>
+  </div>
+
+  <div class="done-card anim" id="doneCard" style="display:none">
+    <div class="done-emoji" id="doneEmoji">🎉</div>
+    <div class="done-title" id="doneTitle"></div>
+    <div class="done-sub" id="doneSub"></div>
+    <div class="done-stats">
+      <div class="done-stat"><div class="done-stat-n" style="color:var(--green)" id="doneEasy">0</div><div class="done-stat-l">Easy</div></div>
+      <div class="done-stat"><div class="done-stat-n" style="color:var(--amber)" id="doneHard">0</div><div class="done-stat-l">Hard</div></div>
+      <div class="done-stat"><div class="done-stat-n" style="color:var(--red)" id="doneAgain">0</div><div class="done-stat-l">Again</div></div>
+    </div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-p" onclick="retryWeak()" id="drillWeakBtn">🔁 Drill weak cards</button>
+      <button class="btn btn-s" onclick="endSession()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ PROGRESS ═══════════════════════════ -->
+<div class="view" id="view-progress">
+  <div class="view-toggle" style="margin-bottom:14px"></div>
+  <div class="slabel" style="margin-top:4px">Your Progress <div class="slabel-line"></div></div>
+  <div id="progressList"></div>
+</div>
+
+<!-- ═══════════════════════════ RESOURCES ═══════════════════════════ -->
+<div class="view" id="view-resources">
+  <div class="import-wrap">
+    <div class="import-sidebar">
+      <div class="isb-label">📁 Local folders</div>
+      <button class="folder-btn active" onclick="pickResourceFolder()">📂 Choose workspace folder</button>
+      <input id="resourceInput" type="file" accept=".pdf" webkitdirectory multiple style="display:none" onchange="handleResourceInput(event)">
+      <div style="border-top:1px solid var(--brd);margin:11px 0"></div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.6">Select the root "apps year 11" folder locally to load the PDF question and solution previews.</div>
+    </div>
+    <div class="import-main">
+      <div class="import-card" id="impStep1">
+        <h3><span class="sbadge act" id="sb1">1</span> Choose a local folder</h3>
+        <div id="subfolderArea"><div style="color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center"><span class="spin"></span> Waiting for a folder…</div></div>
+      </div>
+      <div class="import-card" id="impStep2" style="display:none">
+        <h3><span class="sbadge" id="sb2">2</span> Review question + solution pairs</h3>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Each card below shows the question PDF and, when available, the matching solution PDF.</div>
+        <div id="fileArea"></div>
+      </div>
+      <div class="import-card" id="impStep3" style="display:none">
+        <h3><span class="sbadge act" id="sb3">3</span> Preview</h3>
+        <div style="font-size:13px;color:var(--muted)" id="pipelineStatus">Select a question pair to preview the PDF pages.</div>
+        <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+        <div class="logbox" id="logBox">Ready to load local PDFs.<br></div>
+      </div>
+      <div class="import-card" id="impStep4" style="display:none">
+        <h3><span class="sbadge done" id="sb4">✓</span> <span id="impResultTitle">Resources loaded!</span></h3>
+        <div id="impSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+        <div id="previewCards" class="resource-panel"></div>
+        <div class="btn-row">
+          <button class="btn btn-g" onclick="nav('home')">📚 Start studying →</button>
+          <button class="btn btn-s" onclick="resetResources()">Load another folder</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="apps year 11/generated/resource-manifest.js"></script>
+<script src="apps year 11/generated/pdf-study-manifest.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════
+// SYLLABUS — 6 topics across 2 units (Mathematics Applications ATAR, Year 11)
+// ══════════════════════════════════════════════════
+const TOPICS = {
+  '1.1': {id:'a11',code:'1.1',name:'Consumer arithmetic',icon:'💰',color:'#6c63ff',unit:1,
+    kw:['percentage','percent','salary','wage','wages','overtime','commission','piecework','simple interest','compound interest','inflation','cpi','consumer price index','mark-up','markup','discount','gst','profit','loss','currency','exchange rate','dividend','share','price-to-earnings','p/e ratio','spreadsheet','budget','wage-sheet','taxable income','net pay','gross pay','allowance','pension','earn','earns','earning','income','rate of pay','per hour','hourly rate','timesheet','annual salary','weekly','fortnightly','cost price','selling price','retail price','sale price','interest rate','invest','investment','loan','repayment','deposit','withdraw','bank account']},
+  '1.2': {id:'a12',code:'1.2',name:'Algebra and matrices',icon:'🧮',color:'#22c55e',unit:1,
+    kw:['substitute','formula','subject of the formula','transposition','matrix','matrices','row matrix','column matrix','identity matrix','leading diagonal','scalar multiplication','matrix multiplication','order of a matrix','zero matrix','table of values','algebraic expression','expand the expression','simplify the expression','pronumeral']},
+  '1.3': {id:'a13',code:'1.3',name:'Shape and measurement',icon:'📏',color:'#3b82f6',unit:1,
+    kw:['pythagoras','pythagorean','hypotenuse','perimeter','area of a circle','area of a sector','composite shape','volume','surface area','cylinder','cone','sphere','prism','pyramid','similar figures','similarity','scale factor','scale drawing','similar triangles','sector','radius','diameter','circumference','composite figure','net of a solid','capacity','litres','millimetres','centimetres','kilometres','rectangle','parallelogram','trapezium','right-angled','right angled triangle']},
+  '2.1': {id:'a21',code:'2.1',name:'Univariate data analysis',icon:'📊',color:'#f59e0b',unit:2,
+    kw:['categorical','numerical variable','discrete','continuous','dot plot','stem plot','bar chart','histogram','modality','skewed','mean','standard deviation','standard score','z-score','normal distribution','68%','95%','99.7%','quantile','box plot','boxplot','iqr','interquartile range','outlier','five-number summary','median','statistical investigation','data set','survey','sample','population','frequency','frequency table']},
+  '2.2': {id:'a22',code:'2.2',name:'Applications of trigonometry',icon:'📐',color:'#ef4444',unit:2,
+    kw:["sine rule","cosine rule","heron's rule",'herons rule','angle of elevation','angle of depression','bearing','non-right-angled','right-angled triangle','triangulation','area of a triangle','trigonometric ratio','elevation','depression','angle of inclination']},
+  '2.3': {id:'a23',code:'2.3',name:'Linear equations and their graphs',icon:'📈',color:'#14b8a6',unit:2,
+    kw:['linear equation','straight-line graph','gradient','slope','intercept','simultaneous','break-even','piece-wise','piecewise','step graph','linear relationship','x-intercept','y-intercept','line graph','rearrange','solve for','solve the equation']},
+};
+const TOPIC_LIST = Object.values(TOPICS);
+
+// ══════════════════════════════════════════════════
+// BOOK CHAPTERS — 23 textbook chapters, mapped onto the 6 syllabus topics above
+// ══════════════════════════════════════════════════
+const CHAPTERS = [
+  {id:'u1-1',unit:1,num:1,name:'Use of formulae',parentTopic:'a12',icon:'🧮',
+    kw:['substitute','formula','subject of the formula','transposition','evaluate the formula']},
+  {id:'u1-2',unit:1,num:2,name:'Percentages',parentTopic:'a11',icon:'💰',
+    kw:['percentage','percent','percentage change','percentage increase','percentage decrease','%']},
+  {id:'u1-3',unit:1,num:3,name:'Simple interest',parentTopic:'a11',icon:'💰',
+    kw:['simple interest']},
+  {id:'u1-4',unit:1,num:4,name:'Compound interest',parentTopic:'a11',icon:'💰',
+    kw:['compound interest','compounding']},
+  {id:'u1-5',unit:1,num:5,name:'Other financial considerations',parentTopic:'a11',icon:'💰',
+    kw:['inflation','cpi','consumer price index','mark-up','markup','discount','gst','profit','loss','currency','exchange rate','dividend','share','price-to-earnings','wage','salary','wages','overtime','commission','piecework','spreadsheet','budget','allowance','pension']},
+  {id:'u1-6',unit:1,num:6,name:'Matrices',parentTopic:'a12',icon:'🧮',
+    kw:['matrix','matrices','row matrix','column matrix','identity matrix','leading diagonal','scalar multiplication','order of a matrix','zero matrix']},
+  {id:'u1-7',unit:1,num:7,name:'The theorem of Pythagoras',parentTopic:'a13',icon:'📏',
+    kw:['pythagoras','pythagorean','hypotenuse']},
+  {id:'u1-8',unit:1,num:8,name:'Perimeter and area',parentTopic:'a13',icon:'📏',
+    kw:['perimeter','area of a circle','area of a sector','area of a rectangle','area of a parallelogram','composite shape','sector']},
+  {id:'u1-9',unit:1,num:9,name:'Surface area and volume',parentTopic:'a13',icon:'📏',
+    kw:['surface area','volume','cylinder','cone','sphere','prism','pyramid']},
+  {id:'u1-10',unit:1,num:10,name:'Similarity',parentTopic:'a13',icon:'📏',
+    kw:['similar figures','similarity','scale factor','scale drawing','similar triangles']},
+  {id:'u2-1',unit:2,num:1,name:'Univariate data: classify, organise and display',parentTopic:'a21',icon:'📊',
+    kw:['categorical variable','numerical variable','discrete variable','continuous variable','dot plot','stem plot','bar chart','tally']},
+  {id:'u2-2',unit:2,num:2,name:'Summarising data and describing distributions',parentTopic:'a21',icon:'📊',
+    kw:['mean','median','mode','modality','skewed','symmetric','distribution','histogram']},
+  {id:'u2-3',unit:2,num:3,name:'Measures of dispersion or spread',parentTopic:'a21',icon:'📊',
+    kw:['standard deviation','range','spread','variance']},
+  {id:'u2-4',unit:2,num:4,name:'Boxplots, histograms and more about describing distributions',parentTopic:'a21',icon:'📊',
+    kw:['box plot','boxplot','five-number summary','iqr','interquartile range','outlier','parallel box plot']},
+  {id:'u2-5',unit:2,num:5,name:'The statistical investigation process',parentTopic:'a21',icon:'📊',
+    kw:['statistical investigation','clarify the problem','collect data','investigative task']},
+  {id:'u2-6',unit:2,num:6,name:'Solving equations',parentTopic:'a23',icon:'📈',
+    kw:['solve the equation','solve for','linear equation','rearrange']},
+  {id:'u2-7',unit:2,num:7,name:'Using equations to solve problems',parentTopic:'a23',icon:'📈',
+    kw:['word description','develop a linear equation','model the situation']},
+  {id:'u2-8',unit:2,num:8,name:'Linear relationships',parentTopic:'a23',icon:'📈',
+    kw:['straight-line graph','gradient','slope','y-intercept','linear graph']},
+  {id:'u2-9',unit:2,num:9,name:'Piecewise defined relationships',parentTopic:'a23',icon:'📈',
+    kw:['piece-wise','piecewise','step graph','line segment graph']},
+  {id:'u2-10',unit:2,num:10,name:'Trigonometry for right triangles',parentTopic:'a22',icon:'📐',
+    kw:['right-angled triangle','trigonometric ratio','sin(','cos(','tan(']},
+  {id:'u2-11',unit:2,num:11,name:'Trigonometry for triangles that are not right angled',parentTopic:'a22',icon:'📐',
+    kw:['sine rule','cosine rule',"heron's rule",'non-right-angled','bearing','angle of elevation','angle of depression','triangulation']},
+  {id:'u2-12',unit:2,num:12,name:'Simultaneous linear equations',parentTopic:'a23',icon:'📈',
+    kw:['simultaneous','break-even','point of intersection']},
+  {id:'u2-13',unit:2,num:13,name:'Standard scores and the normal distribution',parentTopic:'a21',icon:'📊',
+    kw:['standard score','z-score','normal distribution','68%','95%','99.7%','quantile','normally distributed']},
+];
+const CHAPTER_LIST = CHAPTERS;
+
+function inferBookChapterId(card){
+  const candidates = CHAPTER_LIST.filter(c=>c.parentTopic===card.topicId);
+  if(!candidates.length) return '';
+  const text = `${card.questionText||card.q||''} ${card.title||''} ${card.sourceTitle||''}`.toLowerCase();
+  let best=candidates[0], bestScore=0;
+  candidates.forEach(ch=>{
+    const score = ch.kw.reduce((n,kw)=>n+(text.includes(kw)?1:0),0);
+    if(score>bestScore){bestScore=score;best=ch;}
+  });
+  return best.id;
+}
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let progress = {};
+let viewMode = localStorage.getItem('mca_viewMode') || 'topic'; // 'topic' | 'chapter'
+let resourcePairs = Array.isArray(window.APPS_RESOURCE_MANIFEST) ? [...window.APPS_RESOURCE_MANIFEST] : [];
+let pdfStudyCards = Array.isArray(window.APPS_PDF_STUDY_MANIFEST) ? [...window.APPS_PDF_STUDY_MANIFEST] : [];
+let resourceFiles = [];
+let selectedResourceId = '';
+let resourcePreviewUrls = [];
+
+function loadState() {
+  try {
+    progress = JSON.parse(localStorage.getItem('mca_progress') || '{}');
+  } catch(e) { progress = {}; }
+}
+
+function saveProgress() { try { localStorage.setItem('mca_progress', JSON.stringify(progress)); } catch(e){} }
+
+function getChapProgress(chId, qs) {
+  const p = progress[chId] || {};
+  const seen = Object.keys(p).length;
+  const correct = Object.values(p).filter(v=>{const r=entryRating(v);return r==='easy'||r==='good';}).length;
+  const done = Math.min(seen, qs.length);
+  return { done, total:qs.length, pct: qs.length > 0 ? Math.round(done/qs.length*100) : 0, acc: seen > 0 ? Math.round(correct/seen*100) : 0 };
+}
+
+// ══════════════════════════════════════════════════
+// SPACED REPETITION (simple interval ladder, in days)
+// ══════════════════════════════════════════════════
+function entryRating(entry) { return entry && typeof entry === 'object' ? entry.r : entry; }
+function entryDue(entry) { return entry && typeof entry === 'object' ? entry.due : 0; }
+
+function nextInterval(prevIvl, rating) {
+  prevIvl = prevIvl || 0;
+  let ivl;
+  if (rating === 'again') ivl = 0;
+  else if (rating === 'hard') ivl = Math.max(1, Math.round((prevIvl || 1) * 1.2));
+  else if (rating === 'good') ivl = prevIvl > 0 ? Math.round(prevIvl * 2) : 2;
+  else ivl = prevIvl > 0 ? Math.round(prevIvl * 3) : 4; // easy
+  return Math.min(ivl, 90);
+}
+
+function isDue(chId, idx) {
+  const entry = (progress[chId] || {})[idx];
+  if (entry === undefined) return true; // never studied — due now
+  const due = entryDue(entry);
+  return !due || due <= Date.now();
+}
+
+function getPdfStudyChapters() {
+  const grouped = {};
+  pdfStudyCards.forEach(card => {
+    if (!card.topicId) return;
+    const chId = `pdf-${card.topicId}`;
+    if (!grouped[chId]) {
+      const topic = TOPIC_LIST.find(t => t.id === card.topicId);
+      const code = card.topicCode || topic?.code || '';
+      grouped[chId] = {
+        id: chId,
+        name: card.topicName || topic?.name || 'Topic',
+        icon: topic?.icon || '🧾',
+        color: topic?.color || '#6c63ff',
+        code,
+        badge: code ? `Topic ${code}` : '',
+        unit: topic?.unit,
+        source: 'PDFs',
+        qs: [],
+      };
+    }
+    grouped[chId].qs.push({
+      ...card,
+      _chId: chId,
+      _chName: grouped[chId].name,
+      _idx: grouped[chId].qs.length,
+    });
+  });
+  return Object.values(grouped);
+}
+
+function getPdfStudyBookChapters() {
+  const grouped = {};
+  pdfStudyCards.forEach(card => {
+    if (!card.topicId) return;
+    const chMeta = CHAPTER_LIST.find(c => c.id === card._chapterId);
+    if (!chMeta) return;
+    const chId = `pdf-bk-${chMeta.id}`;
+    if (!grouped[chId]) {
+      grouped[chId] = {
+        id: chId,
+        name: chMeta.name,
+        icon: chMeta.icon,
+        color: TOPIC_LIST.find(t => t.id === chMeta.parentTopic)?.color || '#6c63ff',
+        code: `Ch ${chMeta.num}`,
+        badge: `Chapter ${chMeta.num}`,
+        num: chMeta.num,
+        unit: chMeta.unit,
+        source: 'PDFs',
+        qs: [],
+      };
+    }
+    grouped[chId].qs.push({
+      ...card,
+      _chId: chId,
+      _chName: grouped[chId].name,
+      _idx: grouped[chId].qs.length,
+    });
+  });
+  return Object.values(grouped).sort((a, b) => a.unit - b.unit || a.num - b.num);
+}
+
+function allChapters() {
+  return viewMode === 'chapter' ? getPdfStudyBookChapters() : getPdfStudyChapters();
+}
+
+// ══════════════════════════════════════════════════
+// VIEW TOGGLE — syllabus topics vs. textbook chapters
+// ══════════════════════════════════════════════════
+function precomputeChapterIds() {
+  pdfStudyCards.forEach(card => {
+    if (card.topicId) card._chapterId = inferBookChapterId(card);
+  });
+}
+
+function renderViewToggles() {
+  const html = `
+    <button class="vt-btn ${viewMode==='topic'?'active':''}" onclick="setViewMode('topic')">📂 Syllabus topics</button>
+    <button class="vt-btn ${viewMode==='chapter'?'active':''}" onclick="setViewMode('chapter')">📖 Book chapters</button>
+  `;
+  document.querySelectorAll('.view-toggle').forEach(el => el.innerHTML = html);
+}
+
+function setViewMode(mode) {
+  if (mode === viewMode) return;
+  viewMode = mode;
+  try { localStorage.setItem('mca_viewMode', mode); } catch(e) {}
+  renderViewToggles();
+  const activeView = document.querySelector('.view.active')?.id;
+  if (activeView === 'view-home') renderHome();
+  if (activeView === 'view-progress') renderProgress();
+}
+
+// ══════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════
+function nav(page) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+page).classList.add('active');
+  const idx = ['home','progress','resources'].indexOf(page);
+  if (idx>=0) document.querySelectorAll('.nav-pill')[idx].classList.add('active');
+  if (page==='home') renderHome();
+  if (page==='progress') renderProgress();
+  if (page==='resources') initResources();
+}
+
+// ══════════════════════════════════════════════════
+// HOME
+// ══════════════════════════════════════════════════
+function renderHome() {
+  renderViewToggles();
+  // Stats
+  let totalStudied=0, totalCorrect=0, dueCount=0;
+  allChapters().forEach(ch => {
+    const p = progress[ch.id]||{};
+    totalStudied += Object.keys(p).length;
+    totalCorrect += Object.values(p).filter(v=>{const r=entryRating(v);return r==='easy'||r==='good';}).length;
+    ch.qs.forEach((q,i)=>{ if(isDue(ch.id,i)) dueCount++; });
+  });
+  const dueMeta = document.getElementById('dueCardMeta');
+  if (dueMeta) dueMeta.textContent = dueCount > 0 ? `${dueCount} card${dueCount!==1?'s':''} ready` : 'All caught up';
+  const acc = totalStudied > 0 ? Math.round(totalCorrect/totalStudied*100)+'%' : '—';
+  let bestName='—', bestAcc=0;
+  allChapters().forEach(ch => {
+    const {acc,done} = getChapProgress(ch.id,ch.qs);
+    if (done>0&&acc>bestAcc){bestAcc=acc;bestName=ch.name;}
+  });
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="stat-n">${totalStudied}</div><div class="stat-l">Cards studied</div></div>
+    <div class="stat-card"><div class="stat-n">${acc}</div><div class="stat-l">Accuracy</div></div>
+    <div class="stat-card"><div class="stat-n" style="font-size:14px;padding-top:4px">${bestName}</div><div class="stat-l">Best topic</div></div>
+    <div class="stat-card"><div class="stat-n" style="color:var(--accent)">${dueCount}</div><div class="stat-l">Cards due</div></div>
+  `;
+
+  // Chapters by unit (grouped by syllabus topic or textbook chapter, per the active toggle)
+  const pdfChapters = allChapters();
+  const u1 = document.getElementById('unit1Grid'); u1.innerHTML='';
+  const u2 = document.getElementById('unit2Grid'); u2.innerHTML='';
+  pdfChapters.filter(ch=>ch.unit===1).forEach(ch=>u1.appendChild(buildChCard(ch)));
+  pdfChapters.filter(ch=>ch.unit===2).forEach(ch=>u2.appendChild(buildChCard(ch)));
+
+  const shuffleMeta = document.getElementById('fullShuffleMeta');
+  if (shuffleMeta) shuffleMeta.textContent = viewMode==='chapter' ? 'All 23 chapters mixed' : 'All 6 topics mixed';
+
+  // Streak
+  const last = progress._lastStudy||'';
+  const today = new Date().toDateString();
+  const yest = new Date(Date.now()-86400000).toDateString();
+  document.getElementById('streakNum').textContent = (last===today||last===yest)?(progress._streak||0):0;
+}
+
+function buildChCard(ch) {
+  const {done,total,pct,acc} = getChapProgress(ch.id,ch.qs);
+  const barColor = pct>70?'#22c55e':pct>30?'#f59e0b':'#6c63ff';
+  const card = document.createElement('div');
+  card.className='ch-card';
+  card.onclick=()=>startSession(ch.id);
+  card.innerHTML=`
+    <div class="ch-top" style="background:${ch.color}"></div>
+    <div class="ch-icon">${ch.icon}</div>
+    ${ch.badge?`<div class="ch-code">${ch.badge}</div>`:''}
+    <div class="ch-name">${ch.name}</div>
+    <div class="ch-meta">${total} cards${ch.source?' · '+ch.source.substring(0,22):''}</div>
+    <div class="ch-bar"><div class="ch-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+    <div class="ch-nums"><span>${done}/${total} studied</span><span>${acc>0?acc+'% acc':'Not started'}</span></div>
+  `;
+  return card;
+}
+
+// ══════════════════════════════════════════════════
+// STUDY SESSION
+// ══════════════════════════════════════════════════
+let S = {qs:[],idx:0,mode:'',chId:'',results:{easy:0,hard:0,again:0},revealed:false};
+
+function startSession(chId) {
+  S.results={easy:0,hard:0,again:0}; S.revealed=false; S.chId=chId;
+  const all = allChapters();
+  const allQs = (chs) => chs.flatMap(ch=>ch.qs.map((q,i)=>({...q,_chId:ch.id,_chName:ch.name,_idx:i})));
+
+  if (chId==='sem1') {
+    const chs = all.filter(ch=>ch.unit===1);
+    S.qs=shuffle(allQs(chs)); S.mode='sem1';
+    document.getElementById('studyTitle').textContent='📘 Semester 1 Exam';
+  } else if (chId==='sem2') {
+    const chs = all.filter(ch=>ch.unit===2);
+    S.qs=shuffle(allQs(chs)); S.mode='sem2';
+    document.getElementById('studyTitle').textContent='📗 Semester 2 Exam';
+  } else if (chId==='full') {
+    S.qs=shuffle(allQs(all)); S.mode='full';
+    document.getElementById('studyTitle').textContent='🎯 Full Year Shuffle';
+  } else if (chId==='weak') {
+    let weak=[];
+    all.forEach(ch=>{const p=progress[ch.id]||{};ch.qs.forEach((q,i)=>{const rating=entryRating(p[i]);if(rating==='again'||rating==='hard')weak.push({...q,_chId:ch.id,_chName:ch.name,_idx:i});});});
+    if(weak.length===0) weak=shuffle(allQs(all)).slice(0,15);
+    S.qs=shuffle(weak); S.mode='weak';
+    document.getElementById('studyTitle').textContent='💪 Weak Spots Drill';
+  } else if (chId==='due') {
+    let due=[];
+    all.forEach(ch=>{ch.qs.forEach((q,i)=>{if(isDue(ch.id,i))due.push({...q,_chId:ch.id,_chName:ch.name,_idx:i});});});
+    if(due.length===0){ toast('🎉 Nothing due right now — try a cram mode instead', true); return; }
+    S.qs=shuffle(due); S.mode='due';
+    document.getElementById('studyTitle').textContent='🧠 Due for Review';
+  } else if (chId==='calcfree') {
+    S.qs=shuffle(allQs(all).filter(q=>q.calculator==='Calculator-free')); S.mode='calcfree';
+    document.getElementById('studyTitle').textContent='✏️ Calculator-Free Drill';
+  } else if (chId==='calcassumed') {
+    S.qs=shuffle(allQs(all).filter(q=>q.calculator==='Calculator-assumed')); S.mode='calcassumed';
+    document.getElementById('studyTitle').textContent='🖩 Calculator-Assumed Drill';
+  } else {
+    const ch=all.find(c=>c.id===chId);
+    S.qs=ch.qs.map((q,i)=>({...q,_chId:ch.id,_chName:ch.name,_idx:i})); S.mode='chapter';
+    document.getElementById('studyTitle').textContent=(ch.icon||'📘')+' '+ch.name;
+  }
+
+  S.idx=0;
+  nav('study');
+  document.getElementById('doneCard').style.display='none';
+  document.getElementById('flashcard').style.display='flex';
+  document.getElementById('revealArea').style.display='block';
+  document.getElementById('ratingArea').style.display='none';
+  showCard();
+}
+
+function showCard() {
+  if (S.idx>=S.qs.length){showDone();return;}
+  const q=S.qs[S.idx]; S.revealed=false;
+  document.getElementById('studyMeta').textContent=`${S.idx+1} / ${S.qs.length}`;
+  const bookCh = CHAPTER_LIST.find(c=>`pdf-bk-${c.id}`===q._chId);
+  const topic = TOPIC_LIST.find(t=>t.id===q.topicId||t.id===q._chId);
+  document.getElementById('fcTopic').textContent = bookCh ? `Chapter ${bookCh.num} · ${bookCh.name}`
+    : topic ? `Topic ${topic.code} · ${topic.name}` : (q._chName||'');
+  if(q.questionImage){
+    document.getElementById('fcQ').innerHTML = `<div style="width:100%"><img src="${q.questionImage}" alt="${escHtml(q.title || 'PDF question')}" style="width:100%;border-radius:10px;border:1px solid var(--brd);background:#fff;max-height:56vh;object-fit:contain"><div style="margin-top:10px;font-size:12px;color:var(--muted)">${escHtml(q.questionText || q.q || q.title || '')}</div></div>`;
+  } else {
+    document.getElementById('fcQ').textContent=q.q;
+  }
+  document.getElementById('fcHint').textContent=q.questionImage ? `Page ${q.pageNumber || ''} · tap to reveal solution screenshot` : (q.hint||'Tap to reveal answer');
+  document.getElementById('fcHint').style.display='block';
+  if(q.solutionImage){
+    document.getElementById('fcA').innerHTML = `<div style="width:100%"><img src="${q.solutionImage}" alt="${escHtml(q.title || 'PDF solution')}" style="width:100%;border-radius:10px;border:1px solid var(--brd);background:#fff;max-height:48vh;object-fit:contain"><div style="margin-top:10px;font-size:12px;color:var(--muted)">${escHtml(q.answerText || 'See solution screenshot')}</div></div>`;
+    document.getElementById('fcExp').textContent=q.questionPdf ? `Source: ${q.sourceTitle || q.title || ''}` : (q.exp||'');
+  } else {
+    document.getElementById('fcA').textContent=q.a;
+    document.getElementById('fcExp').textContent=q.exp||'';
+  }
+  document.getElementById('fcMarks').textContent=q.marks?`${q.marks} mark${q.marks!==1?'s':''}`:'';
+  document.getElementById('fcSrc').textContent=q.source?q.source.substring(0,28):'';
+  // Calculator badge
+  const calcEl=document.getElementById('fcCalc');
+  if(q.calculator){
+    calcEl.textContent=q.calculator;
+    calcEl.className='fc-calc '+(q.calculator==='Calculator-free'?'calc-free':'calc-assumed');
+  } else { calcEl.textContent=''; calcEl.className='fc-calc'; }
+  document.getElementById('fcAWrap').style.display='none';
+  document.getElementById('revealArea').style.display='block';
+  document.getElementById('ratingArea').style.display='none';
+  document.getElementById('flashcard').classList.remove('revealed');
+  updateMini();
+}
+
+function revealCard(){
+  if(S.revealed)return; S.revealed=true;
+  document.getElementById('fcHint').style.display='none';
+  document.getElementById('fcAWrap').style.display='block';
+  document.getElementById('revealArea').style.display='none';
+  document.getElementById('ratingArea').style.display='block';
+  document.getElementById('flashcard').classList.add('revealed');
+}
+
+function rate(r){
+  const q=S.qs[S.idx];
+  if(!progress[q._chId])progress[q._chId]={};
+  const prevEntry=progress[q._chId][q._idx];
+  const prevIvl=(prevEntry&&typeof prevEntry==='object')?(prevEntry.ivl||0):0;
+  const ivl=nextInterval(prevIvl,r);
+  progress[q._chId][q._idx]={r,ivl,due:Date.now()+ivl*86400000};
+  if(r==='easy'||r==='good')S.results.easy++;
+  else if(r==='hard')S.results.hard++;
+  else S.results.again++;
+  const today=new Date().toDateString(),yest=new Date(Date.now()-86400000).toDateString(),last=progress._lastStudy||'';
+  if(last!==today){progress._streak=(last===yest)?(progress._streak||0)+1:1;progress._lastStudy=today;}
+  saveProgress(); S.idx++; showCard();
+}
+
+function updateMini(){
+  document.getElementById('mEasy').textContent=S.results.easy;
+  document.getElementById('mHard').textContent=S.results.hard;
+  document.getElementById('mAgain').textContent=S.results.again;
+}
+
+function showDone(){
+  document.getElementById('flashcard').style.display='none';
+  document.getElementById('revealArea').style.display='none';
+  document.getElementById('ratingArea').style.display='none';
+  document.getElementById('doneCard').style.display='block';
+  const {easy,hard,again}=S.results,total=easy+hard+again,pct=total>0?Math.round(easy/total*100):0;
+  document.getElementById('doneEmoji').textContent=pct>=80?'🎉':pct>=50?'👍':'💪';
+  document.getElementById('doneTitle').textContent=pct>=80?'Excellent work!':pct>=50?'Good session!':'Keep practising!';
+  document.getElementById('doneSub').textContent=`${pct}% correct across ${total} cards`;
+  document.getElementById('doneEasy').textContent=easy;
+  document.getElementById('doneHard').textContent=hard;
+  document.getElementById('doneAgain').textContent=again;
+  document.getElementById('drillWeakBtn').style.display=(again+hard>0)?'inline-flex':'none';
+}
+
+function retryWeak(){startSession('weak');}
+function endSession(){nav('home');}
+
+// ══════════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════════
+function renderProgress(){
+  renderViewToggles();
+  const list=document.getElementById('progressList'); list.innerHTML='';
+  const addLabel=(txt)=>{const d=document.createElement('div');d.className='prog-unit-label';d.textContent=txt;list.appendChild(d);};
+  const addCard=(ch)=>{
+    const {pct,done,total,acc}=getChapProgress(ch.id,ch.qs);
+    const barColor=pct>70?'#22c55e':pct>30?'#f59e0b':'#6c63ff';
+    const card=document.createElement('div'); card.className='prog-card';
+    card.innerHTML=`<div class="prog-row"><div class="prog-icon">${ch.icon||'📘'}</div><div class="prog-info"><div class="prog-name">${ch.badge?'<span style="font-size:10px;color:var(--accent);font-weight:700">'+ch.badge+' </span>':''}${ch.name}</div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${barColor}"></div></div><div class="prog-detail">${done}/${total} studied · ${acc>0?acc+'% accuracy':'Not started'}</div></div><div class="prog-pct" style="color:${barColor}">${pct}%</div></div>`;
+    list.appendChild(card);
+  };
+  const pdfChapters = allChapters();
+  addLabel('Unit 1 — Semester 1');
+  pdfChapters.filter(ch=>ch.unit===1).forEach(addCard);
+  addLabel('Unit 2 — Semester 2');
+  pdfChapters.filter(ch=>ch.unit===2).forEach(addCard);
+}
+
+// ══════════════════════════════════════════════════
+// LOCAL RESOURCES
+// ══════════════════════════════════════════════════
+function initResources(){
+  document.getElementById('sb1').className='sbadge act';
+  document.getElementById('sb2').className=resourcePairs.length ? 'sbadge act' : 'sbadge';
+  document.getElementById('sb3').className=resourcePairs.length ? 'sbadge act' : 'sbadge';
+  document.getElementById('sb4').className=resourcePairs.length ? 'sbadge done' : 'sbadge';
+  if(resourcePairs.length) renderResources();
+  else {
+    document.getElementById('subfolderArea').innerHTML='<div style="color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center"><span class="spin"></span> Waiting for a local folder…</div>';
+    document.getElementById('fileArea').innerHTML='';
+    document.getElementById('previewCards').innerHTML='';
+    document.getElementById('impSummary').innerHTML='';
+    document.getElementById('impResultTitle').textContent='Resources loaded!';
+    document.getElementById('pipelineStatus').textContent='Select a local folder to preview PDF question and solution pairs.';
+  }
+}
+
+function pickResourceFolder(){
+  document.getElementById('resourceInput').click();
+}
+
+async function handleResourceInput(event){
+  const files = Array.from(event.target.files || []).filter(file => /\.pdf$/i.test(file.name));
+  if(!files.length) return;
+  await loadLocalResources(files);
+  event.target.value = '';
+}
+
+async function loadLocalResources(files){
+  resourceFiles = files;
+  resourcePairs = buildResourcePairs(files);
+  selectedResourceId = resourcePairs[0]?.id || '';
+  renderResources();
+  showResourcePreview(selectedResourceId);
+  toast(`Loaded ${resourcePairs.length} resource pairs`, true);
+}
+
+function normalizeResourceName(name){
+  return (name || '')
+    .toLowerCase()
+    .replace(/\.(pdf|docx?|pptx?)$/g, '')
+    .replace(/\b(solutions?|solns?|solution key|marking guide|marking|answers?|answer key|mk|mg|final|copy)\b/g, ' ')
+    .replace(/[\[\]()+_=.,-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isSolutionName(name){
+  return /soln|solution|marking|answer|answers|\bmk\b|\bmg\b/i.test(name || '');
+}
+
+function inferTopicFromText(text){
+  const lower = (text || '').toLowerCase();
+  let best = null;
+  let bestScore = 0;
+  TOPIC_LIST.forEach(topic => {
+    const score = topic.kw.reduce((count, kw) => count + (lower.includes(kw.toLowerCase()) ? 1 : 0), 0);
+    if(score > bestScore){
+      bestScore = score;
+      best = topic;
+    }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+function inferCalculatorFromText(text){
+  const lower = (text || '').toLowerCase();
+  if(/calc\s*-?\s*free|calculator\s*-?\s*free|\bcf\b/.test(lower)) return 'Calculator-free';
+  if(/calc\s*-?\s*assumed|calculator\s*-?\s*assumed|\bca\b/.test(lower)) return 'Calculator-assumed';
+  return 'Unlabelled';
+}
+
+function buildResourcePairs(files){
+  const grouped = new Map();
+  files.forEach(file => {
+    const relative = file.webkitRelativePath || file.name;
+    const base = relative.split('/').pop() || file.name;
+    const normalized = normalizeResourceName(base) || base.toLowerCase();
+    const folder = relative.split('/').slice(0,-1).join('/') || 'Local folder';
+    const key = `${folder}|${normalized.replace(/\s+/g, ' ').trim()}`;
+    if(!grouped.has(key)) grouped.set(key, {id:key, title:key, folder, question:null, solution:null, files:[]});
+    const entry = grouped.get(key);
+    entry.files.push(file);
+    if(isSolutionName(base) && !entry.solution) entry.solution = file;
+    else if(!entry.question) entry.question = file;
+  });
+
+  return [...grouped.values()].map(entry => {
+    const chosen = entry.question || entry.solution || entry.files[0];
+    const sourceName = (chosen?.webkitRelativePath || chosen?.name || entry.title).replace(/\.pdf$/i, '');
+    const topic = inferTopicFromText(`${sourceName} ${entry.folder}`);
+    const calculator = inferCalculatorFromText(sourceName);
+    return {
+      id: entry.id,
+      title: sourceName.replace(/\b(solutions?|solns?|marking guide|marking|answers?|answer key|mk|mg|final|copy)\b/ig, ' ').replace(/\s+/g, ' ').trim(),
+      folder: entry.folder,
+      topic: topic ? `Topic ${topic.code} · ${topic.name}` : 'Topic not inferred',
+      calculator,
+      question: entry.question || null,
+      solution: entry.solution || null,
+    };
+  }).sort((a,b)=>a.title.localeCompare(b.title));
+}
+
+function renderResources(){
+  const subfolderArea = document.getElementById('subfolderArea');
+  const fileArea = document.getElementById('fileArea');
+  const previewCards = document.getElementById('previewCards');
+  document.getElementById('impStep2').style.display = 'block';
+  document.getElementById('impStep3').style.display = 'block';
+  document.getElementById('impStep4').style.display = 'block';
+  document.getElementById('sb2').className = 'sbadge act';
+  document.getElementById('sb3').className = 'sbadge act';
+  document.getElementById('sb4').className = 'sbadge done';
+
+  if(!resourcePairs.length){
+    subfolderArea.innerHTML = '<div style="color:var(--muted);font-size:12px;">No PDFs loaded yet.</div>';
+    fileArea.innerHTML = '';
+    previewCards.innerHTML = '';
+    document.getElementById('impSummary').innerHTML = '';
+    document.getElementById('impResultTitle').textContent = 'Resources loaded!';
+    document.getElementById('pipelineStatus').textContent = 'Select a local folder to preview PDF question and solution pairs.';
+    return;
+  }
+
+  const folderCounts = new Map();
+  resourcePairs.forEach(pair => folderCounts.set(pair.folder, (folderCounts.get(pair.folder) || 0) + 1));
+  subfolderArea.innerHTML = '<div style="color:var(--muted);font-size:11px;margin-bottom:7px">Loaded local folders:</div><div class="sf-grid" id="resourceFolderGrid"></div>';
+  const folderGrid = document.getElementById('resourceFolderGrid');
+  [...folderCounts.entries()].forEach(([folder, count]) => {
+    const firstInFolder = resourcePairs.find(pair => pair.folder === folder);
+    const card = document.createElement('div');
+    card.className = 'sf-card';
+    card.innerHTML = `<div class="sf-icon">📁</div><div class="sf-name">${escHtml(folder)}</div><div style="font-size:10px;color:var(--muted);margin-top:4px">${count} pair${count !== 1 ? 's' : ''}</div>`;
+    card.onclick = () => {
+      const target = firstInFolder ? document.getElementById(`resource-${firstInFolder.id}`) : null;
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      if(firstInFolder) showResourcePreview(firstInFolder.id);
+    };
+    folderGrid.appendChild(card);
+  });
+
+  fileArea.innerHTML = '';
+  resourcePairs.forEach(pair => fileArea.appendChild(buildResourceCard(pair)));
+  document.getElementById('impResultTitle').textContent = `${resourcePairs.length} resource pair${resourcePairs.length !== 1 ? 's' : ''} loaded`;
+  document.getElementById('impSummary').innerHTML = `
+    <span class="pc-badge" style="background:var(--gbg);color:var(--green);padding:3px 10px">${resourcePairs.length} pairs</span>
+    <span class="pc-badge" style="background:var(--aglow);color:var(--accent);padding:3px 10px">${resourcePairs.filter(pair => pair.questionPdf || pair.questionImage || pair.question).length} questions</span>
+    <span class="pc-badge" style="background:var(--abg);color:var(--amber);padding:3px 10px">${resourcePairs.filter(pair => pair.solutionPdf || pair.solutionImage || pair.solution).length} solutions</span>
+    <span class="pc-badge" style="background:var(--gbg);color:var(--green);padding:3px 10px">${resourcePairs.filter(pair => pair.calculator === 'Calculator-free').length} calc-free</span>
+    <span class="pc-badge" style="background:var(--gbg);color:var(--green);padding:3px 10px">${resourcePairs.filter(pair => pair.calculator === 'Calculator-assumed').length} calc-assumed</span>
+  `;
+  previewCards.innerHTML = '';
+  if(selectedResourceId && resourcePairs.some(pair => pair.id === selectedResourceId)) showResourcePreview(selectedResourceId);
+  else if(resourcePairs[0]) showResourcePreview(resourcePairs[0].id);
+}
+
+function buildResourceCard(pair){
+  const card = document.createElement('div');
+  card.className = 'resource-card' + (pair.id === selectedResourceId ? ' sel' : '');
+  card.id = `resource-${pair.id}`;
+  card.dataset.resourceFolder = pair.folder;
+  const topicLabel = pair.topicLabel || pair.topic || 'Topic not inferred';
+  card.innerHTML = `
+    <div class="resource-title">${escHtml(pair.title || 'Untitled resource')}</div>
+    <div class="resource-meta">${escHtml(pair.folder)} · ${pair.questionPdf || pair.questionImage || pair.question ? 'Question PDF' : 'No question PDF'}${pair.solutionPdf || pair.solutionImage || pair.solution ? ' · Solution PDF' : ''}</div>
+    <div class="resource-badges">
+      <span class="resource-badge" style="background:var(--aglow);color:var(--accent)">${escHtml(topicLabel)}</span>
+      <span class="resource-badge" style="background:${pair.calculator === 'Calculator-free' ? 'var(--abg)' : pair.calculator === 'Calculator-assumed' ? 'var(--gbg)' : 'var(--surf3)'};color:${pair.calculator === 'Calculator-free' ? 'var(--amber)' : pair.calculator === 'Calculator-assumed' ? 'var(--green)' : 'var(--muted)'}">${escHtml(pair.calculator)}</span>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">${pair.questionPdf || pair.questionImage || pair.question ? 'Question screenshot ready' : 'No question screenshot'}${pair.solutionPdf || pair.solutionImage || pair.solution ? ' · Solution screenshot ready' : ''}</div>
+  `;
+  card.onclick = () => showResourcePreview(pair.id);
+  return card;
+}
+
+function showResourcePreview(pairId){
+  selectedResourceId = pairId;
+  document.querySelectorAll('.resource-card').forEach(card => card.classList.toggle('sel', card.id === `resource-${pairId}`));
+  const pair = resourcePairs.find(item => item.id === pairId);
+  if(!pair) return;
+  resourcePreviewUrls.filter(url => typeof url === 'string' && url.startsWith('blob:')).forEach(url => URL.revokeObjectURL(url));
+  resourcePreviewUrls = [];
+  document.getElementById('pipelineStatus').textContent = `${pair.title} · ${pair.topicLabel || pair.topic || 'Topic not inferred'} · ${pair.calculator}`;
+  document.getElementById('previewCards').innerHTML = `
+    <div class="resource-preview">
+      <div class="resource-frame">
+        <h4>Question preview</h4>
+        ${pair.questionImage ? `<img src="${pair.questionImage}" alt="${escHtml(pair.title)} question screenshot">` : pair.questionPdf ? `<iframe src="${pair.questionPdf}#page=1&zoom=page-width"></iframe>` : '<div style="padding:14px;color:var(--muted);font-size:12px">No question preview available.</div>'}
+        ${pair.questionPdf ? `<div style="padding:10px 12px;font-size:11px;color:var(--muted)"><a href="${pair.questionPdf}" target="_blank" rel="noreferrer">Open question PDF</a></div>` : ''}
+      </div>
+      <div class="resource-frame">
+        <h4>Solution preview</h4>
+        ${pair.solutionImage ? `<img src="${pair.solutionImage}" alt="${escHtml(pair.title)} solution screenshot">` : pair.solutionPdf ? `<iframe src="${pair.solutionPdf}#page=1&zoom=page-width"></iframe>` : '<div style="padding:14px;color:var(--muted);font-size:12px">No solution PDF detected.</div>'}
+        ${pair.solutionPdf ? `<div style="padding:10px 12px;font-size:11px;color:var(--muted)"><a href="${pair.solutionPdf}" target="_blank" rel="noreferrer">Open solution PDF</a></div>` : ''}
+      </div>
+    </div>
+  `;
+  if(pair.questionImage) resourcePreviewUrls.push(pair.questionImage);
+  if(pair.solutionImage) resourcePreviewUrls.push(pair.solutionImage);
+}
+
+function resetResources(){
+  resourcePairs = [];
+  resourceFiles = [];
+  selectedResourceId = '';
+  resourcePreviewUrls.filter(url => typeof url === 'string' && url.startsWith('blob:')).forEach(url => URL.revokeObjectURL(url));
+  resourcePreviewUrls = [];
+  const input = document.getElementById('resourceInput');
+  if(input) input.value = '';
+  ['impStep2','impStep3','impStep4'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('subfolderArea').innerHTML='<div style="color:var(--muted);font-size:12px;display:flex;gap:7px;align-items:center"><span class="spin"></span> Waiting for a local folder…</div>';
+  document.getElementById('fileArea').innerHTML='';
+  document.getElementById('previewCards').innerHTML='';
+  document.getElementById('impSummary').innerHTML='';
+  document.getElementById('impResultTitle').textContent='Resources loaded!';
+  document.getElementById('pipelineStatus').textContent='Select a local folder to preview PDF question and solution pairs.';
+  document.getElementById('sb2').className='sbadge';
+  document.getElementById('sb3').className='sbadge';
+  document.getElementById('sb4').className='sbadge';
+}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setPbar(pct){document.getElementById('pbar').style.width=pct+'%';}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'')+' show';setTimeout(()=>t.className='toast',3000);}
+
+// BOOT
+loadState();
+precomputeChapterIds();
+renderHome();
+</script>
+</body>
+</html>

@@ -278,26 +278,11 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicName": "Algebra and matrices",
     "topicLabel": "Topic 1.2 · Algebra and matrices",
     "calculator": "Calculator-assumed",
-    "questionPdf": null,
-    "solutionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1  ca Solutions.pdf",
-    "questionImage": null,
-    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-ca-solution-6a1a4fcc0f.jpg",
-    "fileCount": 1
-  },
-  {
-    "id": "sem 1 exams/ross 2020::rshs-apps-11-2020-sem-1-ca-questions",
-    "title": "rshs Apps 11 2020 Sem 1 ca Questions",
-    "folder": "sem 1 exams/ross 2020",
-    "topicId": "a12",
-    "topicCode": "1.2",
-    "topicName": "Algebra and matrices",
-    "topicLabel": "Topic 1.2 · Algebra and matrices",
-    "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1  ca Questions.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-ca-questions-question-431e6d2c06.jpg",
-    "solutionImage": null,
-    "fileCount": 1
+    "solutionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1  ca Solutions.pdf",
+    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-ca-question-431e6d2c06.jpg",
+    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-ca-solution-6a1a4fcc0f.jpg",
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/ross 2020::rshs-apps-11-2020-sem-1-cf",
@@ -308,26 +293,11 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicName": "Algebra and matrices",
     "topicLabel": "Topic 1.2 · Algebra and matrices",
     "calculator": "Calculator-free",
-    "questionPdf": null,
-    "solutionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1 cf Solutions.pdf",
-    "questionImage": null,
-    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-cf-solution-f2a87410b4.jpg",
-    "fileCount": 1
-  },
-  {
-    "id": "sem 1 exams/ross 2020::rshs-apps-11-2020-sem-1-cf-questions",
-    "title": "rshs Apps 11 2020 Sem 1 cf Questions",
-    "folder": "sem 1 exams/ross 2020",
-    "topicId": "a12",
-    "topicCode": "1.2",
-    "topicName": "Algebra and matrices",
-    "topicLabel": "Topic 1.2 · Algebra and matrices",
-    "calculator": "Calculator-free",
     "questionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1  cf Questions.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-cf-questions-question-92cdf36fb8.jpg",
-    "solutionImage": null,
-    "fileCount": 1
+    "solutionPdf": "apps year 11/sem 1 exams/ross 2020/rshs Apps 11 2020 Sem 1 cf Solutions.pdf",
+    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-cf-question-92cdf36fb8.jpg",
+    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2020-rshs-apps-11-2020-sem-1-cf-solution-f2a87410b4.jpg",
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/ross 2021::11-apps-2021-rshs-ca-qns-sem1-word-waep-2021-yr11-apps-u1-s2",
@@ -459,25 +429,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.2 · Algebra and matrices",
     "calculator": "Calculator-free",
     "questionPdf": "apps year 11/sem 1 exams/ross 2024/WAEP 2024 YR11 APPS U1 S1.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s1-question-233c124760.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "sem 1 exams/ross 2024::waep-2024-yr11-apps-u1-s1-moodle",
-    "title": "WAEP 2024 YR11 APPS U1 S1 Moodle",
-    "folder": "sem 1 exams/ross 2024",
-    "topicId": "a12",
-    "topicCode": "1.2",
-    "topicName": "Algebra and matrices",
-    "topicLabel": "Topic 1.2 · Algebra and matrices",
-    "calculator": "Calculator-free",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/sem 1 exams/ross 2024/WAEP 2024 YR11 APPS U1 S1 SOLNS Moodle.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s1-question-233c124760.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s1-moodle-solution-9da0e2f74f.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/ross 2024::waep-2024-yr11-apps-u1-s2",
@@ -489,25 +444,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.2 · Algebra and matrices",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/sem 1 exams/ross 2024/WAEP 2024 YR11 APPS U1 S2.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s2-question-366553241a.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "sem 1 exams/ross 2024::waep-2024-yr11-apps-u1-s2-moodle",
-    "title": "WAEP 2024 YR11 APPS U1 S2 Moodle",
-    "folder": "sem 1 exams/ross 2024",
-    "topicId": "a12",
-    "topicCode": "1.2",
-    "topicName": "Algebra and matrices",
-    "topicLabel": "Topic 1.2 · Algebra and matrices",
-    "calculator": "Calculator-assumed",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/sem 1 exams/ross 2024/WAEP 2024 YR11 APPS U1 S2 SOLNS Moodle.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s2-question-366553241a.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-ross-2024-waep-2024-yr11-apps-u1-s2-moodle-solution-5c9bdbdb50.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/ross 2025::rshs-2025-yr11-apps-u1-s1",
@@ -600,21 +540,6 @@ window.APPS_RESOURCE_MANIFEST = [
     "fileCount": 2
   },
   {
-    "id": "sem 1 exams/watp 2017::2017-unit-1-applications",
-    "title": "2017 Unit 1 Applications",
-    "folder": "sem 1 exams/watp 2017",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Unlabelled",
-    "questionPdf": null,
-    "solutionPdf": "apps year 11/sem 1 exams/watp 2017/2017 Unit 1 Applications Solutions.pdf",
-    "questionImage": null,
-    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2017-2017-unit-1-applications-solution-03373ee48d.jpg",
-    "fileCount": 1
-  },
-  {
     "id": "sem 1 exams/watp 2017::2017-unit-1-applications-calculator-assumed-paper",
     "title": "2017 Unit 1 Applications Calculator Assumed Paper",
     "folder": "sem 1 exams/watp 2017",
@@ -624,10 +549,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/sem 1 exams/watp 2017/2017 Unit 1 Applications Calculator Assumed Paper.pdf",
-    "solutionPdf": null,
+    "solutionPdf": "apps year 11/sem 1 exams/watp 2017/2017 Unit 1 Applications Solutions.pdf",
     "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2017-2017-unit-1-applications-calculator-as-question-12d4ff7dba.jpg",
-    "solutionImage": null,
-    "fileCount": 1
+    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2017-2017-unit-1-applications-solution-03373ee48d.jpg",
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/watp 2017::2017-unit-1-applications-calculator-free-paper",
@@ -645,21 +570,6 @@ window.APPS_RESOURCE_MANIFEST = [
     "fileCount": 1
   },
   {
-    "id": "sem 1 exams/watp 2018::2018-applications-unit-1",
-    "title": "2018_applications_unit_1_solutions_",
-    "folder": "sem 1 exams/watp 2018",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Unlabelled",
-    "questionPdf": null,
-    "solutionPdf": "apps year 11/sem 1 exams/watp 2018/2018_applications_unit_1_solutions_.pdf",
-    "questionImage": null,
-    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2018-2018-applications-unit-1-solution-6d29987e09.jpg",
-    "fileCount": 1
-  },
-  {
     "id": "sem 1 exams/watp 2018::2018-applications-unit-1-ca",
     "title": "2018_applications_unit_1_ca",
     "folder": "sem 1 exams/watp 2018",
@@ -669,10 +579,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/sem 1 exams/watp 2018/2018_applications_unit_1_ca.pdf",
-    "solutionPdf": null,
+    "solutionPdf": "apps year 11/sem 1 exams/watp 2018/2018_applications_unit_1_solutions_.pdf",
     "questionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2018-2018-applications-unit-1-ca-question-ec316c2830.jpg",
-    "solutionImage": null,
-    "fileCount": 1
+    "solutionImage": "apps year 11/generated/resource-previews/sem-1-exams-watp-2018-2018-applications-unit-1-solution-6d29987e09.jpg",
+    "fileCount": 2
   },
   {
     "id": "sem 1 exams/watp 2018::2018-applications-unit1-cf",
@@ -772,27 +682,12 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicCode": "1.1",
     "topicName": "Consumer arithmetic",
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
+    "calculator": "Calculator-free",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-2-yr11-applications-calc-82bf8c28cd.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-calc-82bf8c28cd-question-ef53b632d2.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-2-yr11-applications-calc-key",
-    "title": "Test_2_Yr11_Applications_calc_-_marking_key",
-    "folder": "test/aic",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/generated/docx-pdf-cache/test-2-yr11-applications-calc-key-3040d896cd.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-calc-82bf8c28cd-question-ef53b632d2.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-calc-key-3040d896cd-solution-48ae8634a6.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "test/aic::test-2-yr11-applications-non-calc",
@@ -802,27 +697,12 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicCode": "1.1",
     "topicName": "Consumer arithmetic",
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
+    "calculator": "Calculator-free",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-2-yr11-applications-non-calc-a9eb8f4740.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-non-calc-a9eb8f4740-question-4470c83ee7.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-2-yr11-applications-non-calc-key",
-    "title": "Test_2_Yr11_Applications_non_calc_-_marking_key",
-    "folder": "test/aic",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/generated/docx-pdf-cache/test-2-yr11-applications-non-calc-key-df8fce7902.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-non-calc-a9eb8f4740-question-4470c83ee7.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-2-yr11-applications-non-calc-key-df8fce7-solution-2d9330279e.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "test/aic::test-3-yr11-applications",
@@ -832,27 +712,12 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicCode": "1.1",
     "topicName": "Consumer arithmetic",
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
+    "calculator": "Calculator-free",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-3-yr11-applications-92a3cbcf08.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-3-yr11-applications-92a3cbcf08-question-dc624a3b7f.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-3-yr11-applications-key",
-    "title": "Test_3_Yr11_Applications_marking_key",
-    "folder": "test/aic",
-    "topicId": "",
-    "topicCode": "",
-    "topicName": "Topic not inferred",
-    "topicLabel": "Topic not inferred",
-    "calculator": "Unlabelled",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/test/aic/Test_3_Yr11_Applications_marking_key.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-3-yr11-applications-92a3cbcf08-question-dc624a3b7f.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/test-aic-test-3-yr11-applications-key-solution-182d15b869.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "test/aic::test-4-yr11-applications",
@@ -864,25 +729,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-4-yr11-applications-d54f136ffc.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-4-yr11-applications-d54f136ffc-question-20f7550b68.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-4-yr11-applications-key",
-    "title": "Test_4_Yr11_Applications_Marking_Key",
-    "folder": "test/aic",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/generated/docx-pdf-cache/test-4-yr11-applications-key-f86b690304.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-4-yr11-applications-d54f136ffc-question-20f7550b68.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-4-yr11-applications-key-f86b690304-solution-d9b51b884e.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "test/aic::test-5-yr11-applications",
@@ -894,25 +744,10 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-5-yr11-applications-b7ab645c21.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-5-yr11-applications-b7ab645c21-question-9f104d547c.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-5-yr11-applications-key",
-    "title": "Test_5_Yr11_Applications_marking_key",
-    "folder": "test/aic",
-    "topicId": "",
-    "topicCode": "",
-    "topicName": "Topic not inferred",
-    "topicLabel": "Topic not inferred",
-    "calculator": "Unlabelled",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/test/aic/Test_5_Yr11_Applications_marking_key.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-5-yr11-applications-b7ab645c21-question-9f104d547c.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/test-aic-test-5-yr11-applications-key-solution-cbb43f6b56.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
     "id": "test/aic::test-6-yr11-applications",
@@ -924,28 +759,13 @@ window.APPS_RESOURCE_MANIFEST = [
     "topicLabel": "Topic 1.1 · Consumer arithmetic",
     "calculator": "Calculator-assumed",
     "questionPdf": "apps year 11/generated/docx-pdf-cache/test-6-yr11-applications-485667ec93.pdf",
-    "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-6-yr11-applications-485667ec93-question-30c483c9cf.jpg",
-    "solutionImage": null,
-    "fileCount": 1
-  },
-  {
-    "id": "test/aic::test-6-yr11-applications-key",
-    "title": "Test_6_Yr11_Applications_-_marking_key",
-    "folder": "test/aic",
-    "topicId": "a11",
-    "topicCode": "1.1",
-    "topicName": "Consumer arithmetic",
-    "topicLabel": "Topic 1.1 · Consumer arithmetic",
-    "calculator": "Calculator-assumed",
-    "questionPdf": null,
     "solutionPdf": "apps year 11/generated/docx-pdf-cache/test-6-yr11-applications-key-386f5b6ed6.pdf",
-    "questionImage": null,
+    "questionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-6-yr11-applications-485667ec93-question-30c483c9cf.jpg",
     "solutionImage": "apps year 11/generated/resource-previews/docx-pdf-cache-test-6-yr11-applications-key-386f5b6ed6-solution-ceaadff732.jpg",
-    "fileCount": 1
+    "fileCount": 2
   },
   {
-    "id": "test/cvc 2022::test-1-formula-percentages-and-interest-sol",
+    "id": "test/cvc 2022::test-1-formula-percentages-and-interest",
     "title": "Test_1_Formula_Percentages_and_Interest_Sol",
     "folder": "test/cvc 2022",
     "topicId": "a11",
@@ -955,7 +775,7 @@ window.APPS_RESOURCE_MANIFEST = [
     "calculator": "Unlabelled",
     "questionPdf": "apps year 11/test/cvc 2022/Test_1_Formula_Percentages_and_Interest_Sol.pdf",
     "solutionPdf": null,
-    "questionImage": "apps year 11/generated/resource-previews/test-cvc-2022-test-1-formula-percentages-and-interest-sol-question-9b4fc59f82.jpg",
+    "questionImage": "apps year 11/generated/resource-previews/test-cvc-2022-test-1-formula-percentages-and-interest-question-9b4fc59f82.jpg",
     "solutionImage": null,
     "fileCount": 1
   },
@@ -1065,4 +885,4 @@ window.APPS_RESOURCE_MANIFEST = [
     "fileCount": 1
   }
 ];
-window.APPS_RESOURCE_MANIFEST_UPDATED = "2026-06-23";
+window.APPS_RESOURCE_MANIFEST_UPDATED = "2026-06-25";

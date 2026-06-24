@@ -109,11 +109,28 @@ TOPICS = [
 ]
 
 
+def strip_duplicate_marker(text: str) -> str:
+    """Strip a trailing download-duplicate marker, e.g. 'Exam (2)' -> 'Exam'."""
+    return re.sub(r"\s*\(\d+\)\s*$", "", text).strip()
+
+
+def strip_trailing_year(text: str) -> str:
+    """Strip a lone trailing year, e.g. '...Exam CA 2017' -> '...Exam CA'."""
+    return re.sub(r"\s+(19|20)\d{2}\s*$", "", text).strip()
+
+
 def slugify(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r"\.(pdf|docx?|pptx?)$", "", text)
+    text = strip_duplicate_marker(text)
+    text = strip_trailing_year(text)
     text = re.sub(r"[\[\]()+_=,.'!@#$%^&*{}|\\/?;:~`-]", " ", text)
-    text = re.sub(r"\b(solutions?|solns?|solution key|marking guide|marking|answers?|answer key|mk|mg|final|copy|v\d+\.\d+|v\d+|generated)\b", " ", text)
+    text = re.sub(
+        r"\b(solutions?|solns?|sols?|solution key|marking guide|marking|answers?|answer key|"
+        r"questions?|mk|mg|final|copy|v\d+\.\d+|v\d+|generated)\b",
+        " ",
+        text,
+    )
     text = re.sub(r"\s+", "-", text)
     text = re.sub(r"-+", "-", text)
     return text.strip("-") or "resource"
@@ -121,22 +138,39 @@ def slugify(text: str) -> str:
 
 def display_title(name: str) -> str:
     title = re.sub(r"\.(pdf|docx?|pptx?)$", "", name, flags=re.I)
-    title = re.sub(r"\b(solutions?|solns?|solution key|marking guide|marking|answers?|answer key|mk|mg|final|copy)\b", "", title, flags=re.I)
+    title = re.sub(
+        r"\b(solutions?|solns?|sols?|solution key|marking guide|marking|answers?|answer key|"
+        r"questions?|mk|mg|final|copy)\b",
+        "",
+        title,
+        flags=re.I,
+    )
     title = re.sub(r"\s+", " ", title)
     return title.strip() or name
 
 
 def is_solution(name: str) -> bool:
-    return bool(re.search(r"soln|solution|marking|answer|answers|\bmk\b|\bmg\b", name, flags=re.I))
+    return bool(re.search(r"soln|solution|marking|answer|answers|\bsol\b|\bsols\b|\bmk\b|\bmg\b", name, flags=re.I))
 
 
 def calculator_label(text: str) -> str:
     lower = text.lower()
-    if re.search(r"calc\s*-?\s*free|calculator\s*-?\s*free|\bcf\b", lower):
+    if re.search(r"non[\s-]?calc|calc\s*-?\s*free|calculator\s*-?\s*free|\bcf\b", lower):
         return "Calculator-free"
     if re.search(r"calc\s*-?\s*assumed|calculator\s*-?\s*assumed|\bca\b", lower):
         return "Calculator-assumed"
     return "Unlabelled"
+
+
+def extract_section_number(text: str) -> Optional[int]:
+    """WA exams split into Section One (calculator-free) and Section Two
+    (calculator-assumed); filenames spell this out very inconsistently."""
+    lower = text.lower()
+    if re.search(r"\bs1\b|\bsec(tion)?\s*1\b|\bsection\s*one\b|\bpart\s*1\b", lower):
+        return 1
+    if re.search(r"\bs2\b|\bsec(tion)?\s*2\b|\bsection\s*two\b|\bpart\s*2\b", lower):
+        return 2
+    return None
 
 
 def infer_topic(text: str) -> Dict[str, str]:
@@ -295,6 +329,74 @@ def stable_page_name(relative_path: str, role: str, page_number: int) -> str:
     return f"{stem}-p{page_number:03d}-{role}-{digest}.jpg"
 
 
+def slug_tokens(text: str) -> set:
+    return set(t for t in slugify(text).split("-") if t)
+
+
+def find_fallback_pairs(groups: Dict[str, Dict[str, object]]) -> None:
+    """Same-folder fallback pass: pair leftover question/solution orphans that
+    exact-key matching missed (genuinely different naming conventions), using
+    folder + calculator-label + section-number + token-overlap as a
+    conservative heuristic."""
+    by_folder: Dict[str, List[str]] = defaultdict(list)
+    for key, entry in groups.items():
+        folder = key.rsplit("::", 1)[0]
+        by_folder[folder].append(key)
+
+    for folder, keys in by_folder.items():
+        orphan_q_keys = [k for k in keys if groups[k]["question"] is not None and groups[k]["solution"] is None]
+        orphan_s_keys = [k for k in keys if groups[k]["solution"] is not None and groups[k]["question"] is None]
+        if not orphan_q_keys or not orphan_s_keys:
+            continue
+
+        used_solution_keys: set = set()
+        for q_key in orphan_q_keys:
+            q_doc = groups[q_key]["question"]
+            q_name = q_doc["original"].name
+            q_calc = calculator_label(q_name)
+            q_section = extract_section_number(q_name)
+            q_tokens = slug_tokens(q_name)
+
+            best_key = None
+            best_score = 0.0
+            for s_key in orphan_s_keys:
+                if s_key in used_solution_keys:
+                    continue
+                s_doc = groups[s_key]["solution"]
+                s_name = s_doc["original"].name
+                s_calc = calculator_label(s_name)
+                if q_calc != "Unlabelled" and s_calc != "Unlabelled" and q_calc != s_calc:
+                    continue
+                s_section = extract_section_number(s_name)
+                if q_section is not None and s_section is not None and q_section != s_section:
+                    continue
+                s_tokens = slug_tokens(s_name)
+                if not q_tokens or not s_tokens:
+                    continue
+                overlap = len(q_tokens & s_tokens) / len(q_tokens | s_tokens)
+                # By-elimination bonus: if this is the only candidate left in the
+                # folder, allow a much lower bar (e.g. "2018 Test 3" vs "Test 3
+                # solutions" sharing every token except the year).
+                if len(orphan_q_keys) == 1 and len(orphan_s_keys) == 1:
+                    overlap = max(overlap, 0.5)
+                # Matching section numbers (Section One/Two) are a strong signal
+                # even when the rest of the filename uses a totally different
+                # naming convention.
+                if q_section is not None and s_section is not None and q_section == s_section:
+                    overlap = max(overlap, 0.5)
+                if overlap > best_score:
+                    best_score = overlap
+                    best_key = s_key
+
+            if best_key is not None and best_score >= 0.45:
+                groups[q_key]["solution"] = groups[best_key]["solution"]
+                groups[q_key]["files"].extend(groups[best_key]["files"])
+                used_solution_keys.add(best_key)
+
+        for s_key in used_solution_keys:
+            del groups[s_key]
+
+
 def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str, object]]:
     study_cards: List[Dict[str, object]] = []
     for key in sorted(groups):
@@ -381,10 +483,6 @@ def main() -> None:
         folder = original.parent.relative_to(ROOT).as_posix()
         base = original.name
         base_key = slugify(base)
-        if is_solution(base):
-            base_key = re.sub(r"-(solutions?|solns?|solution|marking-guide|marking|answers?|answer-key|mk|mg|final|copy)(-v\d+\.\d+|-v\d+)?$", "", base_key)
-        else:
-            base_key = re.sub(r"-(final|copy)(-v\d+\.\d+|-v\d+)?$", "", base_key)
         key = f"{folder}::{base_key}"
         entry = groups[key]
         entry["files"].append(doc)
@@ -394,6 +492,8 @@ def main() -> None:
         else:
             if entry["question"] is None:
                 entry["question"] = doc
+
+    find_fallback_pairs(groups)
 
     manifest: List[Dict[str, object]] = []
     rendered = 0
@@ -452,9 +552,11 @@ def main() -> None:
     payload = json.dumps(manifest, ensure_ascii=False, indent=2)
     study_payload = json.dumps(study_cards, ensure_ascii=False, indent=2)
     MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(f"window.APPS_RESOURCE_MANIFEST = {payload};\nwindow.APPS_RESOURCE_MANIFEST_UPDATED = {json.dumps('2026-06-23')};\n", encoding="utf-8")
-    STUDY_MANIFEST_PATH.write_text(f"window.APPS_PDF_STUDY_MANIFEST = {study_payload};\nwindow.APPS_PDF_STUDY_MANIFEST_UPDATED = {json.dumps('2026-06-23')};\n", encoding="utf-8")
+    MANIFEST_PATH.write_text(f"window.APPS_RESOURCE_MANIFEST = {payload};\nwindow.APPS_RESOURCE_MANIFEST_UPDATED = {json.dumps('2026-06-25')};\n", encoding="utf-8")
+    STUDY_MANIFEST_PATH.write_text(f"window.APPS_PDF_STUDY_MANIFEST = {study_payload};\nwindow.APPS_PDF_STUDY_MANIFEST_UPDATED = {json.dumps('2026-06-25')};\n", encoding="utf-8")
     print(f"Wrote {len(manifest)} resource entries, {len(study_cards)} study cards, and rendered {rendered} previews to {OUTPUT_DIR}")
+    missing = sum(1 for e in groups.values() if e["question"] is not None and e["solution"] is None)
+    print(f"Question groups still missing a solution: {missing} / {sum(1 for e in groups.values() if e['question'] is not None)}")
 
 
 if __name__ == "__main__":

@@ -733,7 +733,10 @@ function startSession(chId) {
     document.getElementById('studyTitle').textContent='🖩 Calculator-Assumed Drill';
   } else {
     const ch=all.find(c=>c.id===chId);
-    S.qs=ch.qs.map((q,i)=>({...q,_chId:ch.id,_chName:ch.name,_idx:i})); S.mode='chapter';
+    const chQs=ch.qs.map((q,i)=>({...q,_chId:ch.id,_chName:ch.name,_idx:i}));
+    const chDue=chQs.filter(q=>isDue(ch.id,q._idx));
+    const chNotDue=chQs.filter(q=>!isDue(ch.id,q._idx));
+    S.qs=shuffle(chDue).concat(shuffle(chNotDue)); S.mode='chapter';
     document.getElementById('studyTitle').textContent=(ch.icon||'📘')+' '+ch.name;
   }
 

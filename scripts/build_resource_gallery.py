@@ -5,7 +5,6 @@ import io
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -14,6 +13,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "generated" / "resource-previews"
+DOCX_CACHE_DIR = ROOT / "generated" / "docx-pdf-cache"
 MANIFEST_PATH = ROOT / "generated" / "resource-manifest.js"
 STUDY_MANIFEST_PATH = ROOT / "generated" / "pdf-study-manifest.js"
 
@@ -159,12 +159,31 @@ TOPICS = [
     },
 ]
 
+MAX_SLUG_LEN = 60
+
+
+def strip_duplicate_marker(text: str) -> str:
+    """Strip a trailing download-duplicate marker, e.g. 'Exam (2)' -> 'Exam'."""
+    return re.sub(r"\s*\(\d+\)\s*$", "", text).strip()
+
+
+def strip_trailing_year(text: str) -> str:
+    """Strip a lone trailing year, e.g. '...Exam CA 2017' -> '...Exam CA'."""
+    return re.sub(r"\s+(19|20)\d{2}\s*$", "", text).strip()
+
 
 def slugify(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r"\.(pdf|docx?|pptx?)$", "", text)
+    text = strip_duplicate_marker(text)
+    text = strip_trailing_year(text)
     text = re.sub(r"[\[\]()+_=,.'!@#$%^&*{}|\\/?;:~`-]", " ", text)
-    text = re.sub(r"\b(solutions?|solns?|solution key|marking guide|marking|answers?|answer key|mk|mg|final|copy|v\d+\.\d+|v\d+|generated)\b", " ", text)
+    text = re.sub(
+        r"\b(solutions?|solns?|sols?|solution key|marking guide|marking|answers?|answer key|"
+        r"questions?|mk|mg|final|copy|v\d+\.\d+|v\d+|generated)\b",
+        " ",
+        text,
+    )
     text = re.sub(r"\s+", "-", text)
     text = re.sub(r"-+", "-", text)
     return text.strip("-") or "resource"
@@ -172,22 +191,39 @@ def slugify(text: str) -> str:
 
 def display_title(name: str) -> str:
     title = re.sub(r"\.(pdf|docx?|pptx?)$", "", name, flags=re.I)
-    title = re.sub(r"\b(solutions?|solns?|solution key|marking guide|marking|answers?|answer key|mk|mg|final|copy)\b", "", title, flags=re.I)
+    title = re.sub(
+        r"\b(solutions?|solns?|sols?|solution key|marking guide|marking|answers?|answer key|"
+        r"questions?|mk|mg|final|copy)\b",
+        "",
+        title,
+        flags=re.I,
+    )
     title = re.sub(r"\s+", " ", title)
     return title.strip() or name
 
 
 def is_solution(name: str) -> bool:
-    return bool(re.search(r"soln|solution|marking|answer|answers|\bmk\b|\bmg\b", name, flags=re.I))
+    return bool(re.search(r"soln|solution|marking|answer|answers|\bsol\b|\bsols\b|\bmk\b|\bmg\b", name, flags=re.I))
 
 
 def calculator_label(text: str) -> str:
     lower = text.lower()
-    if re.search(r"calc\s*-?\s*free|calculator\s*-?\s*free|\bcf\b", lower):
+    if re.search(r"non[\s-]?calc|calc\s*-?\s*free|calculator\s*-?\s*free|\bcf\b", lower):
         return "Calculator-free"
     if re.search(r"calc\s*-?\s*assumed|calculator\s*-?\s*assumed|\bca\b", lower):
         return "Calculator-assumed"
     return "Unlabelled"
+
+
+def extract_section_number(text: str) -> Optional[int]:
+    """WA exams split into Section One (calculator-free) and Section Two
+    (calculator-assumed); filenames spell this out very inconsistently."""
+    lower = text.lower()
+    if re.search(r"\bs1\b|\bsec(tion)?\s*1\b|\bsection\s*one\b|\bpart\s*1\b", lower):
+        return 1
+    if re.search(r"\bs2\b|\bsec(tion)?\s*2\b|\bsection\s*two\b|\bpart\s*2\b", lower):
+        return 2
+    return None
 
 
 def infer_topic(text: str) -> Dict[str, str]:
@@ -204,36 +240,67 @@ def infer_topic(text: str) -> Dict[str, str]:
     return {"id": best["id"], "code": best["code"], "name": best["name"]}
 
 
+def is_locked_office_temp(name: str) -> bool:
+    return name.startswith("~$")
+
+
+def convert_docx_to_pdf(docx_path: Path) -> Optional[Path]:
+    rel = docx_path.relative_to(ROOT).as_posix()
+    digest = hashlib.sha1(rel.encode("utf-8")).hexdigest()[:10]
+    stem = slugify(docx_path.name)[:60].strip("-") or "resource"
+    out_path = DOCX_CACHE_DIR / f"{stem}-{digest}.pdf"
+    if out_path.exists() and out_path.stat().st_mtime >= docx_path.stat().st_mtime:
+        return out_path
+    DOCX_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    from docx2pdf import convert  # imported lazily; only needed when .docx files are present
+
+    try:
+        convert(str(docx_path), str(out_path))
+    except Exception as exc:  # pragma: no cover - depends on local Word install
+        print(f"  WARN: could not convert {rel} to PDF ({exc})")
+        return None
+    return out_path if out_path.exists() else None
+
+
+EXCLUDED_DIRS = {"generated", "apps year 11", "waceapp", ".venv", ".git", ".claude", "scripts"}
+
+
+def discover_documents() -> List[Dict[str, Path]]:
+    """Returns a list of {"original": Path, "pdf": Path} for every exam/test document."""
+    docs: List[Dict[str, Path]] = []
+    for path in sorted(ROOT.rglob("*")):
+        if not path.is_file():
+            continue
+        if EXCLUDED_DIRS & set(path.parts):
+            continue
+        if is_locked_office_temp(path.name):
+            continue
+        suffix = path.suffix.lower()
+        if suffix == ".pdf":
+            docs.append({"original": path, "pdf": path})
+        elif suffix == ".docx":
+            pdf_path = convert_docx_to_pdf(path)
+            if pdf_path is not None:
+                docs.append({"original": path, "pdf": pdf_path})
+    return docs
+
+
 def render_preview(pdf_path: Path, out_path: Path) -> None:
-    doc = fitz.open(pdf_path)
-    if doc.page_count == 0:
-        raise ValueError(f"No pages found in {pdf_path}")
-    page = doc.load_page(0)
-    pix = page.get_pixmap(matrix=fitz.Matrix(1.6, 1.6), alpha=False)
-    image = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    image.save(out_path, format="JPEG", quality=85, optimize=True, progressive=True)
-    doc.close()
+    render_page_preview(pdf_path, 0, out_path)
 
 
 def extract_first_page_text(pdf_path: Path) -> str:
-    doc = fitz.open(pdf_path)
-    if doc.page_count == 0:
-        doc.close()
-        return ""
-    text = doc.load_page(0).get_text("text")
-    doc.close()
-    return text or ""
+    return extract_page_text(pdf_path, 0)
 
 
 def stable_name(relative_path: str, role: str) -> str:
-    stem = slugify(relative_path)
+    stem = slugify(relative_path)[:MAX_SLUG_LEN].strip("-") or "resource"
     digest = hashlib.sha1(relative_path.encode("utf-8")).hexdigest()[:10]
     return f"{stem}-{role}-{digest}.jpg"
 
 
 def stable_page_name(relative_path: str, role: str, page_number: int) -> str:
-    stem = slugify(relative_path)
+    stem = slugify(relative_path)[:MAX_SLUG_LEN].strip("-") or "resource"
     digest = hashlib.sha1(f"{relative_path}:{page_number}".encode("utf-8")).hexdigest()[:10]
     return f"{stem}-p{page_number:03d}-{role}-{digest}.jpg"
 
@@ -314,6 +381,73 @@ def pick_solution_page_index(question_page_index: int, question_pages: int, solu
     return min(question_page_index, solution_pages - 1)
 
 
+def slug_tokens(text: str) -> set:
+    return set(t for t in slugify(text).split("-") if t)
+
+
+def find_fallback_pairs(groups: Dict[str, Dict[str, object]]) -> None:
+    """Same-folder fallback pass: pair leftover question/solution orphans that
+    exact-key matching missed (genuinely different naming conventions), using
+    folder + calculator-label + token-overlap as a conservative heuristic."""
+    by_folder: Dict[str, List[str]] = defaultdict(list)
+    for key, entry in groups.items():
+        folder = key.rsplit("::", 1)[0]
+        by_folder[folder].append(key)
+
+    for folder, keys in by_folder.items():
+        orphan_q_keys = [k for k in keys if groups[k]["question"] is not None and groups[k]["solution"] is None]
+        orphan_s_keys = [k for k in keys if groups[k]["solution"] is not None and groups[k]["question"] is None]
+        if not orphan_q_keys or not orphan_s_keys:
+            continue
+
+        used_solution_keys: set = set()
+        for q_key in orphan_q_keys:
+            q_doc = groups[q_key]["question"]
+            q_name = q_doc["original"].name
+            q_calc = calculator_label(q_name)
+            q_section = extract_section_number(q_name)
+            q_tokens = slug_tokens(q_name)
+
+            best_key = None
+            best_score = 0.0
+            for s_key in orphan_s_keys:
+                if s_key in used_solution_keys:
+                    continue
+                s_doc = groups[s_key]["solution"]
+                s_name = s_doc["original"].name
+                s_calc = calculator_label(s_name)
+                if q_calc != "Unlabelled" and s_calc != "Unlabelled" and q_calc != s_calc:
+                    continue
+                s_section = extract_section_number(s_name)
+                if q_section is not None and s_section is not None and q_section != s_section:
+                    continue
+                s_tokens = slug_tokens(s_name)
+                if not q_tokens or not s_tokens:
+                    continue
+                overlap = len(q_tokens & s_tokens) / len(q_tokens | s_tokens)
+                # By-elimination bonus: if this is the only candidate left in the
+                # folder, allow a much lower bar (e.g. "2018 Methods 11 Test 3" vs
+                # "Methods 11 Test 3 solutions" sharing every token except the year).
+                if len(orphan_q_keys) == 1 and len(orphan_s_keys) == 1:
+                    overlap = max(overlap, 0.5)
+                # Matching section numbers (Section One/Two) are a strong signal
+                # even when the rest of the filename uses a totally different
+                # naming convention (e.g. "Section 1 Examination" vs "S1 SOLNS").
+                if q_section is not None and s_section is not None and q_section == s_section:
+                    overlap = max(overlap, 0.5)
+                if overlap > best_score:
+                    best_score = overlap
+                    best_key = s_key
+
+            if best_key is not None and best_score >= 0.45:
+                groups[q_key]["solution"] = groups[best_key]["solution"]
+                groups[q_key]["files"].extend(groups[best_key]["files"])
+                used_solution_keys.add(best_key)
+
+        for s_key in used_solution_keys:
+            del groups[s_key]
+
+
 def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str, object]]:
     study_cards: List[Dict[str, object]] = []
     for key in sorted(groups):
@@ -323,25 +457,30 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
         if question is None:
             continue
 
-        question_doc = fitz.open(question)
-        solution_doc = fitz.open(solution) if solution is not None else None
+        q_original: Path = question["original"]
+        q_pdf: Path = question["pdf"]
+        s_original: Optional[Path] = solution["original"] if solution else None
+        s_pdf: Optional[Path] = solution["pdf"] if solution else None
+
+        question_doc = fitz.open(q_pdf)
+        solution_doc = fitz.open(s_pdf) if s_pdf is not None else None
         try:
-            question_rel = question.relative_to(ROOT).as_posix()
-            solution_rel = solution.relative_to(ROOT).as_posix() if solution is not None else None
-            folder = question.parent.relative_to(ROOT).as_posix()
-            source_display = display_title(question.name)
+            question_rel = q_pdf.relative_to(ROOT).as_posix()
+            solution_rel = s_pdf.relative_to(ROOT).as_posix() if s_pdf is not None else None
+            folder = q_original.parent.relative_to(ROOT).as_posix()
+            source_display = display_title(q_original.name)
             question_pages = question_doc.page_count
             solution_pages = solution_doc.page_count if solution_doc is not None else 0
 
             for page_index in range(question_pages):
-                page_text = extract_page_text(question, page_index)
+                page_text = extract_page_text(q_pdf, page_index)
                 if not should_include_page(page_text, page_index):
                     continue
                 topic = infer_topic(f"{source_display} {folder} {page_text}")
                 calculator = calculator_label(f"{source_display} {folder} {page_text}")
                 page_number = page_index + 1
                 question_image_rel = (OUTPUT_DIR / stable_page_name(question_rel, "question", page_number)).relative_to(ROOT).as_posix()
-                render_page_preview(question, page_index, ROOT / question_image_rel)
+                render_page_preview(q_pdf, page_index, ROOT / question_image_rel)
 
                 solution_image_rel = None
                 solution_text = ""
@@ -349,8 +488,8 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
                     solution_page_index = pick_solution_page_index(page_index, question_pages, solution_pages)
                     if solution_page_index >= 0:
                         solution_image_rel = (OUTPUT_DIR / stable_page_name(solution_rel or question_rel, "solution", page_number)).relative_to(ROOT).as_posix()
-                        render_page_preview(solution, solution_page_index, ROOT / solution_image_rel)
-                        solution_text = clean_page_text(extract_page_text(solution, solution_page_index))
+                        render_page_preview(s_pdf, solution_page_index, ROOT / solution_image_rel)
+                        solution_text = clean_page_text(extract_page_text(s_pdf, solution_page_index))
 
                 page_excerpt = clean_page_text(page_text)
                 page_title = page_title_from_text(page_text, page_number)
@@ -385,28 +524,27 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
 
 
 def main() -> None:
-    pdfs = sorted(p for p in ROOT.rglob("*.pdf") if "generated" not in p.parts)
+    documents = discover_documents()
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    groups = defaultdict(lambda: {"question": None, "solution": None, "files": []})
-    for pdf in pdfs:
-        relative = pdf.relative_to(ROOT).as_posix()
-        folder = pdf.parent.relative_to(ROOT).as_posix()
-        base = pdf.name
+    groups: Dict[str, Dict[str, object]] = defaultdict(lambda: {"question": None, "solution": None, "files": []})
+    for doc in documents:
+        original = doc["original"]
+        relative = original.relative_to(ROOT).as_posix()
+        folder = original.parent.relative_to(ROOT).as_posix()
+        base = original.name
         base_key = slugify(base)
-        if is_solution(base):
-            base_key = re.sub(r"-(solutions?|solns?|solution|marking-guide|marking|answers?|answer-key|mk|mg|final|copy)(-v\d+\.\d+|-v\d+)?$", "", base_key)
-        else:
-            base_key = re.sub(r"-(final|copy)(-v\d+\.\d+|-v\d+)?$", "", base_key)
         key = f"{folder}::{base_key}"
         entry = groups[key]
-        entry["files"].append(pdf)
+        entry["files"].append(doc)
         if is_solution(base):
             if entry["solution"] is None:
-                entry["solution"] = pdf
+                entry["solution"] = doc
         else:
             if entry["question"] is None:
-                entry["question"] = pdf
+                entry["question"] = doc
+
+    find_fallback_pairs(groups)
 
     manifest: List[Dict[str, object]] = []
     rendered = 0
@@ -414,9 +552,11 @@ def main() -> None:
         entry = groups[key]
         question = entry["question"]
         solution = entry["solution"]
-        any_pdf = question or solution or entry["files"][0]
-        display = display_title(any_pdf.name)
-        folder = any_pdf.parent.relative_to(ROOT).as_posix()
+        any_doc = question or solution or entry["files"][0]
+        any_original: Path = any_doc["original"]
+        any_pdf: Path = any_doc["pdf"]
+        display = display_title(any_original.name)
+        folder = any_original.parent.relative_to(ROOT).as_posix()
         page_text = extract_first_page_text(any_pdf)
         topic = infer_topic(f"{display} {folder} {page_text}")
         calculator = calculator_label(f"{display} {folder} {page_text}")
@@ -427,16 +567,18 @@ def main() -> None:
         solution_pdf = None
 
         if question is not None:
-            question_rel = question.relative_to(ROOT).as_posix()
+            q_pdf: Path = question["pdf"]
+            question_rel = q_pdf.relative_to(ROOT).as_posix()
             question_pdf = question_rel
             question_img = (OUTPUT_DIR / stable_name(question_rel, "question")).relative_to(ROOT).as_posix()
-            render_preview(question, ROOT / question_img)
+            render_preview(q_pdf, ROOT / question_img)
             rendered += 1
         if solution is not None:
-            solution_rel = solution.relative_to(ROOT).as_posix()
+            s_pdf: Path = solution["pdf"]
+            solution_rel = s_pdf.relative_to(ROOT).as_posix()
             solution_pdf = solution_rel
             solution_img = (OUTPUT_DIR / stable_name(solution_rel, "solution")).relative_to(ROOT).as_posix()
-            render_preview(solution, ROOT / solution_img)
+            render_preview(s_pdf, ROOT / solution_img)
             rendered += 1
 
         manifest.append(
@@ -461,9 +603,11 @@ def main() -> None:
     payload = json.dumps(manifest, ensure_ascii=False, indent=2)
     study_payload = json.dumps(study_cards, ensure_ascii=False, indent=2)
     MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    MANIFEST_PATH.write_text(f"window.RESOURCE_MANIFEST = {payload};\nwindow.RESOURCE_MANIFEST_UPDATED = {json.dumps('2026-06-22')};\n", encoding="utf-8")
-    STUDY_MANIFEST_PATH.write_text(f"window.PDF_STUDY_MANIFEST = {study_payload};\nwindow.PDF_STUDY_MANIFEST_UPDATED = {json.dumps('2026-06-22')};\n", encoding="utf-8")
+    MANIFEST_PATH.write_text(f"window.RESOURCE_MANIFEST = {payload};\nwindow.RESOURCE_MANIFEST_UPDATED = {json.dumps('2026-06-24')};\n", encoding="utf-8")
+    STUDY_MANIFEST_PATH.write_text(f"window.PDF_STUDY_MANIFEST = {study_payload};\nwindow.PDF_STUDY_MANIFEST_UPDATED = {json.dumps('2026-06-24')};\n", encoding="utf-8")
     print(f"Wrote {len(manifest)} resource entries, {len(study_cards)} study cards, and rendered {rendered} previews to {OUTPUT_DIR}")
+    missing = sum(1 for e in groups.values() if e["question"] is not None and e["solution"] is None)
+    print(f"Question groups still missing a solution: {missing} / {sum(1 for e in groups.values() if e['question'] is not None)}")
 
 
 if __name__ == "__main__":

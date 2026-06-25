@@ -32,7 +32,10 @@ TOPICS = [
             "event",
             "set notation",
             "union",
-            "intersection",
+            "∪",
+            "∩",
+            "intersection of events",
+            "intersection of the sets",
             "complement",
             "mutually exclusive",
             "pascal",
@@ -525,10 +528,35 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
             solution_pages = solution_doc.page_count if solution_doc is not None else 0
             solution_page_map = build_solution_page_map(solution_doc) if solution_doc is not None else {}
 
+            current_card: Optional[Dict[str, object]] = None
             for page_index in range(question_pages):
                 page_text = extract_page_text(q_pdf, page_index)
                 if not should_include_page(page_text, page_index):
                     continue
+
+                # A page with no "Question N" marker is a continuation of the
+                # previous question (e.g. part (ii)/(iii) printed on the next
+                # page) rather than a new standalone question. Showing it on
+                # its own loses the context needed to even understand what's
+                # being asked, so fold its text into the card we already have
+                # instead of creating an orphan fragment.
+                has_marker = bool(re.search(r"question\s+\d+", page_text, flags=re.I))
+                if not has_marker and current_card is not None:
+                    merged_text = f"{current_card['_rawText']} {clean_page_text(page_text)}"
+                    current_card["_rawText"] = merged_text
+                    topic = infer_topic(f"{source_display} {folder} {merged_text}")
+                    current_card["topicId"] = topic["id"]
+                    current_card["topicCode"] = topic["code"]
+                    current_card["topicName"] = topic["name"]
+                    current_card["topicLabel"] = f"Topic {topic['code']} · {topic['name']}" if topic["code"] else "Topic not inferred"
+                    current_card["questionText"] = merged_text[:2000]
+                    current_card["marks"] = current_card["marks"] + parse_marks(page_text)
+                    continue
+
+                if current_card is not None:
+                    study_cards.append(current_card)
+                    current_card = None
+
                 topic = infer_topic(f"{source_display} {folder} {page_text}")
                 calculator = calculator_label(f"{source_display} {folder} {page_text}")
                 page_number = page_index + 1
@@ -550,33 +578,37 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
 
                 page_excerpt = clean_page_text(page_text)
                 page_title = page_title_from_text(page_text, page_number)
-                study_cards.append(
-                    {
-                        "id": f"{key}::p{page_number}",
-                        "sourceId": key,
-                        "title": page_title,
-                        "folder": folder,
-                        "sourceTitle": source_display,
-                        "pageNumber": page_number,
-                        "topicId": topic["id"],
-                        "topicCode": topic["code"],
-                        "topicName": topic["name"],
-                        "topicLabel": f"Topic {topic['code']} · {topic['name']}" if topic["code"] else "Topic not inferred",
-                        "calculator": calculator,
-                        "questionText": page_excerpt[:1200],
-                        "answerText": solution_text[:1200] if solution_text else "See solution screenshot",
-                        "questionImage": question_image_rel,
-                        "solutionImage": solution_image_rel,
-                        "questionPdf": question_rel,
-                        "solutionPdf": solution_rel,
-                        "marks": parse_marks(page_text),
-                    }
-                )
+                current_card = {
+                    "id": f"{key}::p{page_number}",
+                    "sourceId": key,
+                    "title": page_title,
+                    "folder": folder,
+                    "sourceTitle": source_display,
+                    "pageNumber": page_number,
+                    "topicId": topic["id"],
+                    "topicCode": topic["code"],
+                    "topicName": topic["name"],
+                    "topicLabel": f"Topic {topic['code']} · {topic['name']}" if topic["code"] else "Topic not inferred",
+                    "calculator": calculator,
+                    "_rawText": page_excerpt,
+                    "questionText": page_excerpt[:2000],
+                    "answerText": solution_text[:1200] if solution_text else "See solution screenshot",
+                    "questionImage": question_image_rel,
+                    "solutionImage": solution_image_rel,
+                    "questionPdf": question_rel,
+                    "solutionPdf": solution_rel,
+                    "marks": parse_marks(page_text),
+                }
+
+            if current_card is not None:
+                study_cards.append(current_card)
         finally:
             question_doc.close()
             if solution_doc is not None:
                 solution_doc.close()
 
+    for card in study_cards:
+        card.pop("_rawText", None)
     return study_cards
 
 

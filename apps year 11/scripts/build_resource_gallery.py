@@ -327,6 +327,33 @@ def pick_solution_page_index(question_page_index: int, question_pages: int, solu
     return min(question_page_index, solution_pages - 1)
 
 
+def extract_question_number(text: str) -> Optional[int]:
+    match = re.search(r"Question\s+(\d{1,3})\b", text, flags=re.I)
+    if match:
+        return int(match.group(1))
+    return None
+
+
+def build_solution_page_map(solution_doc) -> Dict[int, int]:
+    """Solutions booklets are often far denser than the question booklet
+    (several worked answers per page where the questions had one per page),
+    so naive page-index alignment drifts badly. Scan the solution doc once
+    for "Question N" / "N. (a)" style markers and map question number ->
+    the solution page that actually answers it."""
+    page_map: Dict[int, int] = {}
+    for page_index in range(solution_doc.page_count):
+        text = solution_doc.load_page(page_index).get_text("text") or ""
+        for match in re.finditer(r"Question\s+(\d{1,3})\b", text, flags=re.I):
+            num = int(match.group(1))
+            if num not in page_map:
+                page_map[num] = page_index
+        for match in re.finditer(r"(?m)^\s*(\d{1,3})\.\s", text):
+            num = int(match.group(1))
+            if num not in page_map:
+                page_map[num] = page_index
+    return page_map
+
+
 MAX_SLUG_LEN = 60
 
 
@@ -433,6 +460,7 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
             source_display = display_title(q_original.name)
             question_pages = question_doc.page_count
             solution_pages = solution_doc.page_count if solution_doc is not None else 0
+            solution_page_map = build_solution_page_map(solution_doc) if solution_doc is not None else {}
 
             for page_index in range(question_pages):
                 page_text = extract_page_text(q_pdf, page_index)
@@ -447,7 +475,11 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
                 solution_image_rel = None
                 solution_text = ""
                 if solution_doc is not None and solution_pages > 0:
-                    solution_page_index = pick_solution_page_index(page_index, question_pages, solution_pages)
+                    question_number = extract_question_number(page_text)
+                    if question_number is not None and question_number in solution_page_map:
+                        solution_page_index = solution_page_map[question_number]
+                    else:
+                        solution_page_index = pick_solution_page_index(page_index, question_pages, solution_pages)
                     if solution_page_index >= 0:
                         solution_image_rel = (OUTPUT_DIR / stable_page_name(solution_rel or question_rel, "solution", page_number)).relative_to(ROOT).as_posix()
                         render_page_preview(s_pdf, solution_page_index, ROOT / solution_image_rel)

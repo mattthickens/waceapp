@@ -64,7 +64,10 @@ TOPICS = [
             "roots",
             "cubic",
             "asymptote",
-            "circle",
+            "equation of a circle",
+            "circle with centre",
+            "centre and radius",
+            "circle with equation",
         ],
     },
     {
@@ -229,9 +232,13 @@ def extract_section_number(text: str) -> Optional[int]:
 def infer_topic(text: str) -> Dict[str, str]:
     lower = text.lower()
     best = None
-    best_score = 0
+    best_score = 0.0
     for topic in TOPICS:
-        score = sum(1 for kw in topic["keywords"] if kw.lower() in lower)
+        # Multi-word phrases ("sample space") are far more topic-specific than
+        # bare single words ("event", "circle", "minimum"), which are prone to
+        # matching exam boilerplate (e.g. "Circle your teacher's name"); weight
+        # phrase hits higher so a couple of real signals beat incidental noise.
+        score = sum((2 if " " in kw else 1) for kw in topic["keywords"] if kw.lower() in lower)
         if score > best_score:
             best_score = score
             best = topic
@@ -242,6 +249,13 @@ def infer_topic(text: str) -> Dict[str, str]:
 
 def is_locked_office_temp(name: str) -> bool:
     return name.startswith("~$")
+
+
+# Word reliably hangs/crashes converting these (corrupt or unusually formatted
+# .docx); skip them outright instead of stalling every rebuild.
+KNOWN_BAD_DOCX = {
+    "Semester 1 Exams/ashs 2019/Year 11 Mathematics Methods Section 1 Semester 1 Examination 2019 RN (1).docx",
+}
 
 
 def convert_docx_to_pdf(docx_path: Path) -> Optional[Path]:
@@ -274,6 +288,8 @@ def discover_documents() -> List[Dict[str, Path]]:
         if EXCLUDED_DIRS & set(path.parts):
             continue
         if is_locked_office_temp(path.name):
+            continue
+        if path.relative_to(ROOT).as_posix() in KNOWN_BAD_DOCX:
             continue
         suffix = path.suffix.lower()
         if suffix == ".pdf":
@@ -360,11 +376,20 @@ def parse_marks(text: str) -> int:
     return 0
 
 
+BOILERPLATE_ONLY_RE = re.compile(
+    r"supplementary page|left blank intentionally|structure of this paper|this page has been left blank",
+    re.I,
+)
+
+
 def should_include_page(text: str, page_index: int) -> bool:
     cleaned = (text or "").strip()
     if not cleaned:
         return False
-    if page_index == 0 and not re.search(r"question\s+\d+", cleaned, flags=re.I):
+    has_question_marker = bool(re.search(r"question\s+\d+", cleaned, flags=re.I))
+    if BOILERPLATE_ONLY_RE.search(cleaned) and not has_question_marker:
+        return False
+    if page_index == 0 and not has_question_marker:
         return False
     if len(cleaned) < 60 and page_index == 0:
         return False

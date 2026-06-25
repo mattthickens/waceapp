@@ -176,9 +176,13 @@ def extract_section_number(text: str) -> Optional[int]:
 def infer_topic(text: str) -> Dict[str, str]:
     lower = text.lower()
     best = None
-    best_score = 0
+    best_score = 0.0
     for topic in TOPICS:
-        score = sum(1 for kw in topic["keywords"] if kw.lower() in lower)
+        # Multi-word phrases ("sample space") are far more topic-specific than
+        # bare single words ("event", "circle", "minimum"), which are prone to
+        # matching exam boilerplate (e.g. "Circle your teacher's name"); weight
+        # phrase hits higher so a couple of real signals beat incidental noise.
+        score = sum((2 if " " in kw else 1) for kw in topic["keywords"] if kw.lower() in lower)
         if score > best_score:
             best_score = score
             best = topic
@@ -293,11 +297,20 @@ def parse_marks(text: str) -> int:
     return 0
 
 
+BOILERPLATE_ONLY_RE = re.compile(
+    r"supplementary page|left blank intentionally|structure of this paper|this page has been left blank",
+    re.I,
+)
+
+
 def should_include_page(text: str, page_index: int) -> bool:
     cleaned = (text or "").strip()
     if not cleaned:
         return False
-    if page_index == 0 and not re.search(r"question\s+\d+", cleaned, flags=re.I):
+    has_question_marker = bool(re.search(r"question\s+\d+", cleaned, flags=re.I))
+    if BOILERPLATE_ONLY_RE.search(cleaned) and not has_question_marker:
+        return False
+    if page_index == 0 and not has_question_marker:
         return False
     if len(cleaned) < 60 and page_index == 0:
         return False

@@ -232,6 +232,29 @@ def extract_section_number(text: str) -> Optional[int]:
     return None
 
 
+_KEYWORD_PATTERN_CACHE: Dict[str, "re.Pattern"] = {}
+
+
+def _keyword_pattern(kw: str) -> "re.Pattern":
+    pattern = _KEYWORD_PATTERN_CACHE.get(kw)
+    if pattern is None:
+        # Plain substring matching lets short keywords match inside unrelated
+        # words ("tan" inside "constant", "sum" inside "CALCULATOR-ASSUMED",
+        # "pascal" inside "kilopascals"), which silently mistagged huge swaths
+        # of unrelated questions. Use word boundaries, but only where the
+        # keyword's edge is actually alphanumeric (symbols/percent signs like
+        # "∩" or "68%" aren't word characters, so \b around them is moot).
+        prefix = r"\b" if kw[0].isalnum() else ""
+        suffix = r"\b" if kw[-1].isalnum() else ""
+        pattern = re.compile(prefix + re.escape(kw) + suffix)
+        _KEYWORD_PATTERN_CACHE[kw] = pattern
+    return pattern
+
+
+def keyword_matches(text: str, kw: str) -> bool:
+    return bool(_keyword_pattern(kw.lower()).search(text))
+
+
 def infer_topic(text: str) -> Dict[str, str]:
     lower = text.lower()
     best = None
@@ -241,13 +264,26 @@ def infer_topic(text: str) -> Dict[str, str]:
         # bare single words ("event", "circle", "minimum"), which are prone to
         # matching exam boilerplate (e.g. "Circle your teacher's name"); weight
         # phrase hits higher so a couple of real signals beat incidental noise.
-        score = sum((2 if " " in kw else 1) for kw in topic["keywords"] if kw.lower() in lower)
+        score = sum((2 if " " in kw else 1) for kw in topic["keywords"] if keyword_matches(lower, kw))
         if score > best_score:
             best_score = score
             best = topic
     if best is None:
         return {"id": "", "code": "", "name": "Topic not inferred"}
     return {"id": best["id"], "code": best["code"], "name": best["name"]}
+
+
+def infer_topic_for_page(page_text: str, source_display: str, folder: str) -> Dict[str, str]:
+    """Multi-topic test papers (e.g. "Counting Methods and Trigonometric
+    Functions Test") have their filename/folder bleed into every question's
+    classification, sometimes overriding a perfectly good content-based
+    match. Trust the actual page content first; only fall back to
+    filename/folder context for pages with no recognisable vocabulary at
+    all (e.g. a lone diagram-based question)."""
+    content_topic = infer_topic(page_text)
+    if content_topic["id"]:
+        return content_topic
+    return infer_topic(f"{source_display} {folder} {page_text}")
 
 
 def is_locked_office_temp(name: str) -> bool:
@@ -544,7 +580,7 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
                 if not has_marker and current_card is not None:
                     merged_text = f"{current_card['_rawText']} {clean_page_text(page_text)}"
                     current_card["_rawText"] = merged_text
-                    topic = infer_topic(f"{source_display} {folder} {merged_text}")
+                    topic = infer_topic_for_page(merged_text, source_display, folder)
                     current_card["topicId"] = topic["id"]
                     current_card["topicCode"] = topic["code"]
                     current_card["topicName"] = topic["name"]
@@ -557,7 +593,7 @@ def build_pdf_study_cards(groups: Dict[str, Dict[str, object]]) -> List[Dict[str
                     study_cards.append(current_card)
                     current_card = None
 
-                topic = infer_topic(f"{source_display} {folder} {page_text}")
+                topic = infer_topic_for_page(page_text, source_display, folder)
                 calculator = calculator_label(f"{source_display} {folder} {page_text}")
                 page_number = page_index + 1
                 question_image_rel = (OUTPUT_DIR / stable_page_name(question_rel, "question", page_number)).relative_to(ROOT).as_posix()
@@ -647,7 +683,7 @@ def main() -> None:
         display = display_title(any_original.name)
         folder = any_original.parent.relative_to(ROOT).as_posix()
         page_text = extract_first_page_text(any_pdf)
-        topic = infer_topic(f"{display} {folder} {page_text}")
+        topic = infer_topic_for_page(page_text, display, folder)
         calculator = calculator_label(f"{display} {folder} {page_text}")
 
         question_img = None

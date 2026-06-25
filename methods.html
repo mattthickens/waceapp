@@ -461,13 +461,32 @@ const CHAPTERS = [
 ];
 const CHAPTER_LIST = CHAPTERS;
 
+// Plain substring matching lets short keywords match inside unrelated words
+// ("tan" inside "constant", "sum" inside "CALCULATOR-ASSUMED"), silently
+// mistagging huge swaths of unrelated questions. Match on word boundaries,
+// but only where the keyword's edge is actually alphanumeric (symbols like
+// "∩" or "68%" aren't word characters, so \b around them is moot).
+const _keywordPatternCache = {};
+function keywordMatches(text, kw){
+  let pattern = _keywordPatternCache[kw];
+  if(!pattern){
+    const isAlnum = ch => /[a-z0-9]/i.test(ch);
+    const prefix = isAlnum(kw[0]) ? '\\b' : '';
+    const suffix = isAlnum(kw[kw.length-1]) ? '\\b' : '';
+    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    pattern = new RegExp(prefix + escaped + suffix, 'i');
+    _keywordPatternCache[kw] = pattern;
+  }
+  return pattern.test(text);
+}
+
 function inferBookChapterId(card){
   const candidates = CHAPTER_LIST.filter(c=>c.parentTopic===card.topicId);
   if(!candidates.length) return '';
   const text = `${card.questionText||card.q||''} ${card.title||''} ${card.sourceTitle||''}`.toLowerCase();
   let best=candidates[0], bestScore=0;
   candidates.forEach(ch=>{
-    const score = ch.kw.reduce((n,kw)=>n+(text.includes(kw)?1:0),0);
+    const score = ch.kw.reduce((n,kw)=>n+(keywordMatches(text,kw)?1:0),0);
     if(score>bestScore){bestScore=score;best=ch;}
   });
   return best.id;
@@ -913,7 +932,7 @@ function inferTopicFromText(text){
   let best = null;
   let bestScore = 0;
   TOPIC_LIST.forEach(topic => {
-    const score = topic.kw.reduce((count, kw) => count + (lower.includes(kw.toLowerCase()) ? 1 : 0), 0);
+    const score = topic.kw.reduce((count, kw) => count + (keywordMatches(lower, kw.toLowerCase()) ? 1 : 0), 0);
     if(score > bestScore){
       bestScore = score;
       best = topic;
